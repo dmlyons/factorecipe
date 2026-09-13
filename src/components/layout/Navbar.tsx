@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useGame } from '../../context/GameContext';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import {
   Cog,
   Calculator,
@@ -24,6 +25,30 @@ export const Navbar: React.FC = () => {
   } = useGame();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [dbMenuOpen, setDbMenuOpen] = useState(false);
+  const dbMenuRef = useRef<HTMLDivElement>(null);
+
+  useEscapeKey(dbMenuOpen, () => setDbMenuOpen(false));
+
+  useEffect(() => {
+    if (!dbMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dbMenuRef.current && !dbMenuRef.current.contains(e.target as Node)) {
+        setDbMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [dbMenuOpen]);
+
+  const selectDatabase = (id: string) => {
+    if (id === '__manage__') {
+      setActiveTab('settings');
+    } else {
+      setActiveDatabaseId(id);
+    }
+    setDbMenuOpen(false);
+  };
 
   const primaryTabs: {
     id: 'calculator' | 'recipes' | 'items' | 'crafters' | 'progression';
@@ -69,30 +94,52 @@ export const Navbar: React.FC = () => {
 
             {/* Sandbox Database Selector */}
             <div className="hidden md:flex items-center pl-3 border-l border-slate-800 flex-shrink-0">
-              <div className="relative">
-                <select
-                  value={activeDatabase.id}
-                  onChange={(e) => {
-                    if (e.target.value === '__manage__') {
-                      setActiveTab('settings');
-                    } else {
-                      setActiveDatabaseId(e.target.value);
-                    }
-                  }}
-                  className="appearance-none bg-slate-900 border border-slate-700/80 hover:border-slate-600 text-xs font-semibold text-slate-200 py-1.5 pl-7 pr-8 rounded-lg cursor-pointer focus:outline-none focus:border-amber-400 transition"
+              <div className="relative" ref={dbMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setDbMenuOpen((open) => !open)}
+                  className="flex items-center gap-1.5 bg-slate-900 border border-slate-700/80 hover:border-slate-600 text-xs font-semibold text-slate-200 py-1.5 pl-2.5 pr-2 rounded-lg cursor-pointer focus:outline-none focus:border-amber-400 transition max-w-[180px]"
                   title="Switch sandbox or manage databases"
+                  aria-haspopup="listbox"
+                  aria-expanded={dbMenuOpen}
                 >
-                  {databases.map((db) => (
-                    <option key={db.id} value={db.id}>
-                      {db.icon} {db.name}
-                    </option>
-                  ))}
-                  <option value="__manage__">⚙️ Manage Sandboxes...</option>
-                </select>
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none">
-                  {activeDatabase.icon}
-                </span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <span className="text-xs flex-shrink-0">{activeDatabase.icon}</span>
+                  <span className="truncate">{activeDatabase.name}</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                </button>
+                {dbMenuOpen && (
+                  <div
+                    role="listbox"
+                    className="absolute left-0 top-full mt-1.5 w-64 max-h-72 overflow-y-auto bg-slate-900 border border-slate-700/80 rounded-lg shadow-2xl z-50 py-1"
+                  >
+                    {databases.map((db) => (
+                      <button
+                        key={db.id}
+                        type="button"
+                        role="option"
+                        aria-selected={db.id === activeDatabase.id}
+                        onClick={() => selectDatabase(db.id)}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-left transition ${
+                          db.id === activeDatabase.id
+                            ? 'bg-amber-500/15 text-amber-300'
+                            : 'text-slate-200 hover:bg-slate-800'
+                        }`}
+                      >
+                        <span className="flex-shrink-0">{db.icon}</span>
+                        <span className="truncate">{db.name}</span>
+                      </button>
+                    ))}
+                    <div className="h-[1px] bg-slate-800 my-1" />
+                    <button
+                      type="button"
+                      onClick={() => selectDatabase('__manage__')}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-left text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition"
+                    >
+                      <span className="flex-shrink-0">⚙️</span>
+                      <span>Manage Sandboxes...</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
