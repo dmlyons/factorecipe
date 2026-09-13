@@ -39,6 +39,7 @@ An interactive, sandbox-focused recipe tracker, production tree solver, and fact
   - Add, edit, or delete items, crafters/machines, and recipes.
   - Full **Export / Import JSON** support to backup or share your factory databases with other players.
   - Pre-loaded with a comprehensive **Standard Factory Sandbox** (smelting, circuits, chemical refining, science) and a **Blank Sandbox** for custom ground-up setups.
+  - Community example datasets in `examples/` (e.g. a Satisfactory 1.2 production chain) — importable via Settings → Import Sandbox without any code changes.
 
 ---
 
@@ -59,6 +60,12 @@ npm install
 
 # Start local development server
 npm run dev
+```
+
+### Testing
+
+```bash
+npm test
 ```
 
 ### Production Build
@@ -101,6 +108,8 @@ factorecipe/
 │   │   │   └── ItemsView.tsx          # Raw & crafted materials catalog
 │   │   ├── layout/
 │   │   │   └── Navbar.tsx             # Navigation header & sandbox switcher
+│   │   ├── modals/
+│   │   │   └── ImportExportModal.tsx  # Export/import JSON modal (validation preview, drag & drop)
 │   │   ├── progression/
 │   │   │   └── ProgressionView.tsx    # Tech tree progression & pinned targets
 │   │   ├── recipes/
@@ -114,12 +123,16 @@ factorecipe/
 │   ├── types/
 │   │   └── index.ts                   # Core TypeScript types
 │   ├── utils/
-│   │   └── calculator.ts              # Production graph solver & metrics helpers
+│   │   ├── calculator.ts              # Production graph solver & metrics helpers
+│   │   └── calculator.test.ts         # Vitest unit tests for the solver
 │   ├── App.tsx                        # Main application container
 │   ├── index.css                      # Tailwind & custom keyframe styling
 │   └── main.tsx                       # React DOM root entry
+├── examples/
+│   └── satisfactory-1.2.json          # Example importable sandbox dataset
 ├── index.html
 ├── package.json
 ├── tailwind.config.js
-└── vite.config.ts
+├── vite.config.ts
+└── vitest.config.ts
 ```
