@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { useGame } from '../../context/GameContext';
+import { sortByName, sortStrings } from '../../utils/sort';
 import { Recipe, RecipeIngredient, RecipeProduct } from '../../types';
 import {
   Search,
@@ -103,7 +104,7 @@ export const RecipeCatalog: React.FC = () => {
   };
 
   // Filter recipes
-  const categories = Array.from(new Set(activeDatabase.recipes.map((r) => r.category)));
+  const categories = sortStrings(Array.from(new Set(activeDatabase.recipes.map((r) => r.category))));
 
   const filteredRecipes = activeDatabase.recipes.filter((r) => {
     const isUnlocked = progression.unlockedRecipeIds.includes(r.id);
@@ -128,6 +129,7 @@ export const RecipeCatalog: React.FC = () => {
     }
     return true;
   });
+  const sortedRecipes = sortByName(filteredRecipes);
 
   return (
     <div className="space-y-6">
@@ -222,7 +224,7 @@ export const RecipeCatalog: React.FC = () => {
 
       {/* Recipe Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredRecipes.map((recipe) => {
+        {sortedRecipes.map((recipe) => {
           const isUnlocked = progression.unlockedRecipeIds.includes(recipe.id);
           const defaultCrafter = activeDatabase.crafters.find(
             (c) => c.id === recipe.defaultCrafterId
@@ -459,7 +461,7 @@ export const RecipeCatalog: React.FC = () => {
                     onChange={(e) => setFormDefaultCrafterId(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-400"
                   >
-                    {activeDatabase.crafters.map((c) => (
+                    {sortByName(activeDatabase.crafters).map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name} ({c.speed}x speed)
                       </option>
@@ -497,7 +499,7 @@ export const RecipeCatalog: React.FC = () => {
                       }}
                       className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-100"
                     >
-                      {activeDatabase.items.map((i) => (
+                      {sortByName(activeDatabase.items).map((i) => (
                         <option key={i.id} value={i.id}>
                           {i.icon} {i.name}
                         </option>
@@ -559,7 +561,7 @@ export const RecipeCatalog: React.FC = () => {
                       }}
                       className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-100"
                     >
-                      {activeDatabase.items.map((i) => (
+                      {sortByName(activeDatabase.items).map((i) => (
                         <option key={i.id} value={i.id}>
                           {i.icon} {i.name}
                         </option>

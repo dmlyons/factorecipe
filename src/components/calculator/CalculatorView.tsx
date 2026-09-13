@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useGame } from '../../context/GameContext';
+import { sortByName } from '../../utils/sort';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { FlowGraph } from './FlowGraph';
 import { formatRate, formatPower, getBeltRequirements } from '../../utils/calculator';
@@ -586,12 +587,13 @@ export const CalculatorView: React.FC = () => {
 
             {/* Modal Item Grid */}
             <div className="p-4 overflow-y-auto flex-1 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-              {activeDatabase.items
-                .filter(
+              {sortByName(
+                activeDatabase.items.filter(
                   (item) =>
                     item.name.toLowerCase().includes(itemPickerSearch.toLowerCase()) ||
                     item.category.toLowerCase().includes(itemPickerSearch.toLowerCase())
                 )
+              )
                 .map((item) => (
                   <button
                     key={item.id}
@@ -643,7 +645,7 @@ export const CalculatorView: React.FC = () => {
             </p>
 
             <div className="space-y-2">
-              {activeDatabase.crafters.map((c) => {
+              {sortByName(activeDatabase.crafters).map((c) => {
                 const currentPref = preferredCrafters[editingNodeRecipeId];
                 const isSelected = currentPref === c.id;
 

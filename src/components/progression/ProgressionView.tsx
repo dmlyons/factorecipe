@@ -1,5 +1,6 @@
 import React from 'react';
 import { useGame } from '../../context/GameContext';
+import { sortByName, sortStrings } from '../../utils/sort';
 import {
   Trophy,
   Unlock,
@@ -31,7 +32,7 @@ export const ProgressionView: React.FC = () => {
   const percentage = totalRecipes > 0 ? Math.round((unlockedCount / totalRecipes) * 100) : 0;
 
   // Group recipes by category
-  const categories = Array.from(new Set(activeDatabase.recipes.map((r) => r.category)));
+  const categories = sortStrings(Array.from(new Set(activeDatabase.recipes.map((r) => r.category))));
 
   return (
     <div className="space-y-6">
@@ -169,7 +170,7 @@ export const ProgressionView: React.FC = () => {
 
         <div className="space-y-4">
           {categories.map((cat) => {
-            const catRecipes = activeDatabase.recipes.filter((r) => r.category === cat);
+            const catRecipes = sortByName(activeDatabase.recipes.filter((r) => r.category === cat));
             const catUnlocked = catRecipes.filter((r) =>
               progression.unlockedRecipeIds.includes(r.id)
             ).length;

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { useGame } from '../../context/GameContext';
+import { sortByName, sortStrings } from '../../utils/sort';
 import { Item } from '../../types';
 import { Search, Plus, Edit2, Trash2, Calculator, Tag } from 'lucide-react';
 
@@ -85,8 +86,9 @@ export const ItemsView: React.FC = () => {
     }
     return true;
   });
+  const sortedItems = sortByName(filteredItems);
 
-  const categories = Array.from(new Set(activeDatabase.items.map((i) => i.category)));
+  const categories = sortStrings(Array.from(new Set(activeDatabase.items.map((i) => i.category))));
 
   return (
     <div className="space-y-6">
@@ -178,7 +180,7 @@ export const ItemsView: React.FC = () => {
 
       {/* Items Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filteredItems.map((item) => {
+        {sortedItems.map((item) => {
           const recipesProducing = activeDatabase.recipes.filter((r) =>
             r.products.some((p) => p.itemId === item.id)
           );
