@@ -19,7 +19,7 @@ An interactive, sandbox-focused recipe tracker, production tree solver, and fact
   - Detects and prevents circular recipe dependencies cleanly.
 
 - 🗺️ **Visual Flow Graph**:
-  - Interactive SVG node canvas with pan & zoom controls.
+  - Interactive SVG node canvas with mouse drag / wheel zoom and touch drag / pinch-zoom controls (desktop and mobile).
   - Shows animated glowing flow paths between production stages with real-time throughput numbers.
   - Displays machine counts, cycle times, input ingredients, and output rates per stage.
 
@@ -101,7 +101,7 @@ factorecipe/
 │   ├── components/
 │   │   ├── calculator/
 │   │   │   ├── CalculatorView.tsx     # Target rates, metrics, table & checklist views
-│   │   │   └── FlowGraph.tsx          # Interactive SVG canvas with animated DAG flow
+│   │   │   └── FlowGraph.tsx          # Interactive SVG canvas with mouse/touch pan, wheel/pinch zoom, animated DAG flow
 │   │   ├── crafters/
 │   │   │   └── CraftersView.tsx       # Machine speeds, power, and building manager
 │   │   ├── items/
@@ -120,6 +120,8 @@ factorecipe/
 │   │   └── GameContext.tsx            # Global state & LocalStorage persistence
 │   ├── data/
 │   │   └── presets.ts                 # Standard Factory & Blank presets
+│   ├── hooks/
+│   │   └── useEscapeKey.ts            # Closes a modal/dropdown on Escape while it is open
 │   ├── types/
 │   │   └── index.ts                   # Core TypeScript types
 │   ├── utils/
