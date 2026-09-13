@@ -25,6 +25,7 @@ Welcome to the **FactoRecipe** codebase. This document serves as the authoritati
 - **Icons**: `lucide-react`
 - **Celebration / Gamification**: `canvas-confetti`
 - **Linting & Type-Checking**: Strict TypeScript (`strict: true`, `noUnusedLocals: true`, `noUnusedParameters: true`)
+- **Testing**: Vitest (`vitest.config.ts`, node environment) — unit tests for pure logic live alongside their source as `*.test.ts` (e.g. `src/utils/calculator.test.ts`); no component/DOM test setup exists yet
 
 ---
 
@@ -38,7 +39,8 @@ factorecipe/
 │   ├── data/
 │   │   └── presets.ts               # Default database presets (Standard Factory Sandbox & Blank Canvas)
 │   ├── utils/
-│   │   └── calculator.ts            # DAG recursion engine, rate conversions, power summation, belt rates
+│   │   ├── calculator.ts            # DAG recursion engine, rate conversions, power summation, belt rates
+│   │   └── calculator.test.ts       # Vitest unit tests for the calculation engine
 │   ├── context/
 │   │   └── GameContext.tsx          # Global state, persistence hooks, and action dispatches
 │   ├── components/
@@ -55,16 +57,21 @@ factorecipe/
 │   │   │   └── CraftersView.tsx     # Fabrication buildings, speed multipliers, energy consumption, crafter modal
 │   │   ├── progression/
 │   │   │   └── ProgressionView.tsx  # Tech research progression bar, category tiers, pinned milestone goals
-│   │   └── settings/
-│   │       └── DatabaseSettings.tsx # Multi-sandbox manager, JSON import/export, reset presets
+│   │   ├── settings/
+│   │   │   └── DatabaseSettings.tsx # Multi-sandbox manager, JSON import/export, reset presets
+│   │   └── modals/
+│   │       └── ImportExportModal.tsx # Export/import UI: scope picker, JSON preview, drag-and-drop, validation preview
 │   ├── App.tsx                      # Root component containing GameProvider and active tab router
 │   ├── index.css                    # Tailwind root directives, keyframe animations, dark scrollbar styling
 │   └── main.tsx                     # ReactDOM mounting entry
+├── examples/
+│   └── satisfactory-1.2.json        # Example importable GameDatabase sandbox (see §9)
 ├── index.html                       # HTML wrapper with Chakra Petch & JetBrains Mono font links
 ├── package.json                     # NPM dependencies and script targets
 ├── tailwind.config.js               # Industrial color palette extensions
 ├── tsconfig.json                    # Compiler options and path resolutions
-└── vite.config.ts                   # Vite configuration with React plugin
+├── vite.config.ts                   # Vite configuration with React plugin
+└── vitest.config.ts                 # Vitest config (node environment, `src/**/*.test.ts`)
 ```
 
 ---
@@ -153,6 +160,9 @@ npm run dev
 # Run strict TypeScript check and Vite production build
 npm run build
 
+# Run the Vitest unit test suite once (non-watch)
+npm test
+
 # Preview production build locally
 npm run preview
 ```
@@ -161,6 +171,7 @@ npm run preview
 1. **Maintain TypeScript Strictness**:
    - Do NOT leave unused imports or local variables (the project uses `"noUnusedLocals": true` and `"noUnusedParameters": true`).
    - Run `npm run build` after modifying files to verify that `tsc` compiles with 0 errors.
+   - Run `npm test` after modifying `src/utils/calculator.ts` (or any other file with a `*.test.ts` sibling) to verify the Vitest suite still passes.
 2. **Preserve User Customizations & Data Integrity**:
    - Always retain fallback handling when an item or machine is deleted from a custom sandbox.
    - When modifying recipes, ensure validation checks that at least one ingredient and one product exist.
@@ -168,6 +179,10 @@ npm run preview
    - Retain the industrial dark palette (`bg-[#090d16]`, `bg-slate-900`, `border-slate-800`).
    - Use `formatRate` and `formatPower` for clean numerical formatting (avoid long floating-point decimals like `1.33333333333`).
    - For icons, use standard Lucide icons and emojis consistently.
+
+4. **Testing Discipline**:
+   - Pure logic (calculation, formatting, validation) gets colocated `*.test.ts` unit tests; UI components currently have no test harness — verify those manually (`npm run dev`) instead of adding ad hoc component tests.
+   - A test earns its place only if a plausible bug in the covered function would fail it; don't pin incidental output formatting or restate the implementation.
 
 ---
 
@@ -178,3 +193,12 @@ When expanding FactoRecipe, consider these planned enhancements:
 - **Linear Matrix Solver (Simplex / Gaussian Elimination)**: For complex loops with circular byproducts (e.g. Uranium Kovarex enrichment or heavy oil cracking loops) where recursive DAG walking cannot balance closed loops.
 - **Import Presets for Official Games**: Add downloadable or built-in game preset packs for Factorio Space Age, Satisfactory 1.0, and Dyson Sphere Program.
 - **Belts & Inserter Rate Limit Warnings**: Warn when a single building requires more than one full belt or exceeds standard inserter throughput limits.
+
+---
+
+## 9. Example & Community Datasets
+
+`examples/` holds standalone JSON files matching the `GameDatabase` schema (§4), meant to be imported through the running app (Settings → Import Sandbox → drag-and-drop or paste), not wired into `src/data/presets.ts`. They are not built-in presets and require no code change to use.
+
+- `satisfactory-1.2.json`: a partial Satisfactory 1.2 production chain (ore/oil extraction through Smelter, Foundry, Constructor, Assembler, Manufacturer, Refinery), including a Manufacturer recipe with 4 ingredients (Heavy Modular Frame) and a Plastic/Rubber → Heavy Oil Residue → Fuel byproduct chain. Most ratios follow long-stable base-game values; any rounded-for-demonstration ratio is flagged in that recipe's `notes` field and in the file's top-level `description`.
+- When adding another game's example dataset here, validate referential integrity (every `ingredients[].itemId`/`products[].itemId`/`defaultCrafterId` resolves, every non-raw item has a producing recipe) with a throwaway script run through `calculateProductionChain` before committing — do not commit an unexercised dataset.
