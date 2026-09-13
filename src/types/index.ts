@@ -157,3 +157,27 @@ export interface UserProgression {
   pinnedItemIds: string[];
   completedChecklistIds: string[];
 }
+
+export interface FullBackupExport {
+  factorecipe_backup_version: string;
+  exportedAt: string;
+  databases: GameDatabase[];
+  progression: Record<string, UserProgression>;
+  goals: ProductionGoal[];
+}
+
+export type ImportType = 'single_database' | 'full_backup' | 'invalid';
+
+export interface ImportPreview {
+  type: ImportType;
+  name?: string;
+  icon?: string;
+  version?: string;
+  description?: string;
+  itemCount: number;
+  crafterCount: number;
+  recipeCount: number;
+  databaseCount?: number;
+  goalCount?: number;
+  errors: string[];
+}

@@ -8,6 +8,7 @@ import {
   Trophy,
   Database,
   ChevronDown,
+  ArrowUpDown,
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -18,6 +19,7 @@ export const Navbar: React.FC = () => {
     activeTab,
     setActiveTab,
     progression,
+    openImportExportModal,
   } = useGame();
 
   const totalRecipes = activeDatabase.recipes.length;
@@ -127,6 +129,17 @@ export const Navbar: React.FC = () => {
                 </button>
               );
             })}
+
+            <div className="h-5 w-[1px] bg-slate-800 mx-1 hidden md:block" />
+
+            <button
+              onClick={() => openImportExportModal('export')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 border border-slate-700/80 hover:border-amber-400 text-slate-300 hover:text-amber-300 transition shadow-sm whitespace-nowrap"
+              title="Import or Export Recipe Sandboxes & Backups"
+            >
+              <ArrowUpDown className="w-3.5 h-3.5 text-amber-400" />
+              <span>Import / Export</span>
+            </button>
           </nav>
         </div>
       </div>

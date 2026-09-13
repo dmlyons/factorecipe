@@ -7,6 +7,8 @@ import {
   ProductionGoal,
   UserProgression,
   CalculationBreakdown,
+  ImportPreview,
+  FullBackupExport,
 } from '../types';
 import { STARTER_PRESET, PRESETS } from '../data/presets';
 import { calculateProductionChain } from '../utils/calculator';
@@ -18,13 +20,24 @@ interface GameContextType {
   activeDatabaseId: string;
   setActiveDatabaseId: (id: string) => void;
 
-  // Database actions
+  // Database actions & Import/Export
   createDatabase: (name: string, description: string, icon: string) => void;
   updateDatabaseMeta: (name: string, description: string, icon: string) => void;
   deleteDatabase: (id: string) => void;
   resetToDefaultPreset: () => void;
-  importDatabase: (jsonContent: string) => boolean;
+  importDatabase: (jsonContent: string, mode?: 'new' | 'overwrite') => { success: boolean; message: string };
   exportDatabase: () => void;
+  exportDatabaseJson: (databaseId?: string) => string;
+  downloadDatabaseJson: (databaseId?: string) => void;
+  exportFullBackupJson: () => string;
+  downloadFullBackupJson: () => void;
+  validateImportJson: (jsonContent: string) => ImportPreview;
+
+  // Global Import/Export Modal
+  isImportExportModalOpen: boolean;
+  openImportExportModal: (tab?: 'import' | 'export') => void;
+  closeImportExportModal: () => void;
+  importExportModalTab: 'import' | 'export';
 
   // Item actions
   addItem: (item: Omit<Item, 'id'>) => void;
@@ -177,6 +190,19 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   >('calculator');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Global Import / Export Modal state
+  const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
+  const [importExportModalTab, setImportExportModalTab] = useState<'import' | 'export'>('export');
+
+  const openImportExportModal = (tab: 'import' | 'export' = 'export') => {
+    setImportExportModalTab(tab);
+    setIsImportExportModalOpen(true);
+  };
+
+  const closeImportExportModal = () => {
+    setIsImportExportModalOpen(false);
+  };
+
   // Save changes to localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_DATABASES, JSON.stringify(databases));
@@ -263,34 +289,202 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setActiveDatabaseId(STARTER_PRESET.id);
   };
 
-  const importDatabase = (jsonContent: string): boolean => {
+  const validateImportJson = (jsonContent: string): ImportPreview => {
     try {
       const parsed = JSON.parse(jsonContent);
-      if (!parsed.name || !Array.isArray(parsed.items) || !Array.isArray(parsed.recipes)) {
-        alert('Invalid format: Missing name, items, or recipes array.');
-        return false;
+      if (!parsed || typeof parsed !== 'object') {
+        return {
+          type: 'invalid',
+          itemCount: 0,
+          crafterCount: 0,
+          recipeCount: 0,
+          errors: ['JSON payload must be an object.'],
+        };
       }
-      const importedDb: GameDatabase = {
-        ...parsed,
-        id: `imported-${Date.now()}`,
+
+      // Detect full workspace backup
+      if (parsed.factorecipe_backup_version || Array.isArray(parsed.databases)) {
+        const dbs = Array.isArray(parsed.databases) ? (parsed.databases as GameDatabase[]) : [];
+        const totalItems = dbs.reduce((acc: number, d: GameDatabase) => acc + (d.items?.length || 0), 0);
+        const totalRecipes = dbs.reduce((acc: number, d: GameDatabase) => acc + (d.recipes?.length || 0), 0);
+        const totalCrafters = dbs.reduce((acc: number, d: GameDatabase) => acc + (d.crafters?.length || 0), 0);
+
+        return {
+          type: 'full_backup',
+          name: 'Full Workspace Backup',
+          icon: '🗄️',
+          version: parsed.factorecipe_backup_version || '1.0.0',
+          description: `Complete backup containing ${dbs.length} sandbox(es), unlocked progression, and pinned goals.`,
+          itemCount: totalItems,
+          crafterCount: totalCrafters,
+          recipeCount: totalRecipes,
+          databaseCount: dbs.length,
+          goalCount: Array.isArray(parsed.goals) ? parsed.goals.length : 0,
+          errors: [],
+        };
+      }
+
+      // Single database validation
+      const errors: string[] = [];
+      if (!parsed.name || typeof parsed.name !== 'string') {
+        errors.push('Missing "name" property (must be a non-empty string).');
+      }
+      if (!Array.isArray(parsed.items)) {
+        errors.push('Missing or invalid "items" array.');
+      }
+      if (!Array.isArray(parsed.recipes)) {
+        errors.push('Missing or invalid "recipes" array.');
+      }
+
+      if (errors.length > 0) {
+        return {
+          type: 'invalid',
+          itemCount: Array.isArray(parsed.items) ? parsed.items.length : 0,
+          crafterCount: Array.isArray(parsed.crafters) ? parsed.crafters.length : 0,
+          recipeCount: Array.isArray(parsed.recipes) ? parsed.recipes.length : 0,
+          errors,
+        };
+      }
+
+      return {
+        type: 'single_database',
+        name: parsed.name,
+        icon: parsed.icon || '🏭',
+        version: parsed.version || '1.0.0',
+        description: parsed.description || '',
+        itemCount: parsed.items.length,
+        crafterCount: Array.isArray(parsed.crafters) ? parsed.crafters.length : 0,
+        recipeCount: parsed.recipes.length,
+        errors: [],
       };
-      setDatabases((prev) => [...prev, importedDb]);
-      setActiveDatabaseId(importedDb.id);
-      return true;
     } catch (e) {
-      alert(`Import error: ${(e as Error).message}`);
-      return false;
+      return {
+        type: 'invalid',
+        itemCount: 0,
+        crafterCount: 0,
+        recipeCount: 0,
+        errors: [`JSON Syntax Error: ${(e as Error).message}`],
+      };
     }
   };
 
-  const exportDatabase = () => {
-    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(activeDatabase, null, 2));
+  const importDatabase = (
+    jsonContent: string,
+    mode: 'new' | 'overwrite' = 'new'
+  ): { success: boolean; message: string } => {
+    const preview = validateImportJson(jsonContent);
+    if (preview.type === 'invalid') {
+      return { success: false, message: preview.errors.join(' ') };
+    }
+
+    try {
+      const parsed = JSON.parse(jsonContent);
+
+      // Handle Full Backup restoration
+      if (preview.type === 'full_backup') {
+        const dbs = Array.isArray(parsed.databases) ? (parsed.databases as GameDatabase[]) : [];
+        if (dbs.length === 0) {
+          return { success: false, message: 'Backup contains no databases.' };
+        }
+        setDatabases(dbs);
+        setActiveDatabaseId(dbs[0].id);
+        if (parsed.progression && typeof parsed.progression === 'object') {
+          setAllProgressions(parsed.progression);
+        }
+        if (Array.isArray(parsed.goals)) {
+          setGoals(parsed.goals);
+        }
+        return {
+          success: true,
+          message: `Successfully restored full backup with ${dbs.length} sandbox(es).`,
+        };
+      }
+
+      // Handle Single Sandbox import
+      const importedDb: GameDatabase = {
+        id: mode === 'overwrite' ? activeDatabase.id : `game-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        name: parsed.name,
+        version: parsed.version || '1.0.0',
+        description: parsed.description || '',
+        icon: parsed.icon || '🏭',
+        categories: Array.isArray(parsed.categories) ? parsed.categories : ['Raw Resources', 'Crafted'],
+        items: Array.isArray(parsed.items) ? parsed.items : [],
+        crafters: Array.isArray(parsed.crafters) ? parsed.crafters : [],
+        recipes: Array.isArray(parsed.recipes) ? parsed.recipes : [],
+      };
+
+      if (mode === 'overwrite') {
+        setDatabases((prev) => prev.map((db) => (db.id === activeDatabase.id ? importedDb : db)));
+      } else {
+        setDatabases((prev) => [...prev, importedDb]);
+        setActiveDatabaseId(importedDb.id);
+      }
+
+      // Initialize progression for unlockedByDefault recipes
+      const unlocked = importedDb.recipes.filter((r) => r.unlockedByDefault).map((r) => r.id);
+      setAllProgressions((prev) => ({
+        ...prev,
+        [importedDb.id]: {
+          unlockedRecipeIds: unlocked,
+          pinnedItemIds: [],
+          completedChecklistIds: [],
+        },
+      }));
+
+      return {
+        success: true,
+        message: `Successfully imported "${importedDb.name}" (${importedDb.items.length} items, ${importedDb.recipes.length} recipes).`,
+      };
+    } catch (e) {
+      return { success: false, message: `Import error: ${(e as Error).message}` };
+    }
+  };
+
+  const exportDatabaseJson = (databaseId?: string): string => {
+    const targetDb = databaseId ? databases.find((d) => d.id === databaseId) || activeDatabase : activeDatabase;
+    return JSON.stringify(targetDb, null, 2);
+  };
+
+  const downloadDatabaseJson = (databaseId?: string) => {
+    const targetDb = databaseId ? databases.find((d) => d.id === databaseId) || activeDatabase : activeDatabase;
+    const jsonStr = exportDatabaseJson(targetDb.id);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
     const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `${activeDatabase.name.toLowerCase().replace(/\s+/g, '_')}_factorecipe.json`);
+    downloadAnchor.href = url;
+    downloadAnchor.download = `${targetDb.name.toLowerCase().replace(/[^a-z0-9]+/g, '_')}_factorecipe.json`;
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportFullBackupJson = (): string => {
+    const backup: FullBackupExport = {
+      factorecipe_backup_version: '1.0.0',
+      exportedAt: new Date().toISOString(),
+      databases,
+      progression: allProgressions,
+      goals,
+    };
+    return JSON.stringify(backup, null, 2);
+  };
+
+  const downloadFullBackupJson = () => {
+    const jsonStr = exportFullBackupJson();
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.href = url;
+    downloadAnchor.download = `factorecipe_all_sandboxes_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportDatabase = () => {
+    downloadDatabaseJson();
   };
 
   // Item CRUD
@@ -528,6 +722,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         resetToDefaultPreset,
         importDatabase,
         exportDatabase,
+        exportDatabaseJson,
+        downloadDatabaseJson,
+        exportFullBackupJson,
+        downloadFullBackupJson,
+        validateImportJson,
+        isImportExportModalOpen,
+        openImportExportModal,
+        closeImportExportModal,
+        importExportModalTab,
         addItem,
         updateItem,
         deleteItem,

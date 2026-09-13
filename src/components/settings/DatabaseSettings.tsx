@@ -7,7 +7,6 @@ import {
   Plus,
   Trash2,
   RefreshCw,
-  FileJson,
   Layers,
   Cog,
   BookOpen,
@@ -22,17 +21,13 @@ export const DatabaseSettings: React.FC = () => {
     createDatabase,
     deleteDatabase,
     resetToDefaultPreset,
-    importDatabase,
-    exportDatabase,
+    openImportExportModal,
   } = useGame();
 
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newIcon, setNewIcon] = useState('🏭');
-
-  const [importJsonText, setImportJsonText] = useState('');
-  const [showImportModal, setShowImportModal] = useState(false);
 
   const handleCreateNew = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,32 +36,6 @@ export const DatabaseSettings: React.FC = () => {
     setIsCreatingNew(false);
     setNewName('');
     setNewDesc('');
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const content = evt.target?.result as string;
-      if (content) {
-        const ok = importDatabase(content);
-        if (ok) {
-          setShowImportModal(false);
-        }
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  const handlePasteImport = () => {
-    if (!importJsonText.trim()) return;
-    const ok = importDatabase(importJsonText.trim());
-    if (ok) {
-      setImportJsonText('');
-      setShowImportModal(false);
-    }
   };
 
   return (
@@ -104,20 +73,20 @@ export const DatabaseSettings: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={exportDatabase}
+              onClick={() => openImportExportModal('export')}
               className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 border border-slate-700 shadow-sm"
-              title="Download database JSON file"
+              title="Download or copy database JSON"
             >
               <Download className="w-3.5 h-3.5 text-amber-400" />
-              <span>Export JSON</span>
+              <span>Export Sandbox</span>
             </button>
             <button
-              onClick={() => setShowImportModal(true)}
+              onClick={() => openImportExportModal('import')}
               className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 border border-slate-700 shadow-sm"
-              title="Import JSON database"
+              title="Import JSON database or workspace backup"
             >
               <Upload className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Import JSON</span>
+              <span>Import Sandbox</span>
             </button>
           </div>
         </div>
@@ -310,75 +279,6 @@ export const DatabaseSettings: React.FC = () => {
               </button>
             </div>
           </form>
-        </div>
-      )}
-
-      {/* Import Modal */}
-      {showImportModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg p-5 shadow-2xl space-y-4 text-xs">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <FileJson className="w-5 h-5 text-amber-400" />
-                <span>Import Game Database JSON</span>
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowImportModal(false)}
-                className="text-slate-400 hover:text-white text-lg font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-slate-400 font-semibold mb-1">
-                  Upload .JSON file
-                </label>
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={handleFileUpload}
-                  className="w-full text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer"
-                />
-              </div>
-
-              <div className="relative flex py-1 items-center">
-                <div className="flex-grow border-t border-slate-800" />
-                <span className="flex-shrink mx-4 text-slate-600 uppercase text-[10px]">Or paste JSON</span>
-                <div className="flex-grow border-t border-slate-800" />
-              </div>
-
-              <div>
-                <textarea
-                  value={importJsonText}
-                  onChange={(e) => setImportJsonText(e.target.value)}
-                  rows={6}
-                  placeholder="Paste JSON database structure here..."
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 font-mono text-[11px] text-slate-200 focus:outline-none focus:border-amber-400"
-                />
-              </div>
-            </div>
-
-            <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowImportModal(false)}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handlePasteImport}
-                disabled={!importJsonText.trim()}
-                className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-bold shadow-lg shadow-amber-500/20"
-              >
-                Import
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>
