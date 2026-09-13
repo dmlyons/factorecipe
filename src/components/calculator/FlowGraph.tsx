@@ -23,6 +23,9 @@ export const FlowGraph: React.FC<FlowGraphProps> = ({ calculation, onSelectRecip
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const zoomRef = useRef(zoom);
+  const touchPanRef = useRef<{ x: number; y: number } | null>(null);
+  const touchPinchRef = useRef<{ dist: number; zoom: number } | null>(null);
 
   // Group nodes by depth and calculate grid positions
   const { layouts, width, height, rawInputNodes } = useMemo(() => {
@@ -118,6 +121,10 @@ export const FlowGraph: React.FC<FlowGraphProps> = ({ calculation, onSelectRecip
   };
 
   useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
+
+  useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
@@ -132,8 +139,60 @@ export const FlowGraph: React.FC<FlowGraphProps> = ({ calculation, onSelectRecip
       }
       setPan((p) => ({ x: p.x - e.deltaX, y: p.y - e.deltaY }));
     };
+
+    const pinchDistance = (touches: TouchList) => {
+      const [a, b] = [touches[0], touches[1]];
+      return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        touchPinchRef.current = null;
+        const t = e.touches[0];
+        touchPanRef.current = { x: t.clientX, y: t.clientY };
+      } else if (e.touches.length === 2) {
+        touchPanRef.current = null;
+        touchPinchRef.current = { dist: pinchDistance(e.touches), zoom: zoomRef.current };
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      if (e.touches.length === 1 && touchPanRef.current) {
+        const t = e.touches[0];
+        const dx = t.clientX - touchPanRef.current.x;
+        const dy = t.clientY - touchPanRef.current.y;
+        touchPanRef.current = { x: t.clientX, y: t.clientY };
+        setPan((p) => ({ x: p.x + dx, y: p.y + dy }));
+      } else if (e.touches.length === 2 && touchPinchRef.current) {
+        const scale = pinchDistance(e.touches) / touchPinchRef.current.dist;
+        setZoom(Math.min(Math.max(touchPinchRef.current.zoom * scale, 0.3), 2.5));
+      }
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length === 0) {
+        touchPanRef.current = null;
+        touchPinchRef.current = null;
+      } else if (e.touches.length === 1) {
+        touchPinchRef.current = null;
+        const t = e.touches[0];
+        touchPanRef.current = { x: t.clientX, y: t.clientY };
+      }
+    };
+
     el.addEventListener('wheel', onWheel, { passive: false });
-    return () => el.removeEventListener('wheel', onWheel);
+    el.addEventListener('touchstart', onTouchStart, { passive: false });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd, { passive: false });
+    el.addEventListener('touchcancel', onTouchEnd, { passive: false });
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+      el.removeEventListener('touchcancel', onTouchEnd);
+    };
   }, []);
 
   const resetView = () => {
