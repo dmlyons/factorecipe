@@ -38,6 +38,8 @@ factorecipe/
 │   │   └── index.ts                 # Canonical domain models (Item, Crafter, Recipe, CalculationBreakdown, etc.)
 │   ├── data/
 │   │   └── presets.ts               # Default database presets (Standard Factory Sandbox & Blank Canvas)
+│   ├── hooks/
+│   │   └── useEscapeKey.ts          # Shared hook: closes a modal/dropdown on Escape while it is open
 │   ├── utils/
 │   │   ├── calculator.ts            # DAG recursion engine, rate conversions, power summation, belt rates
 │   │   └── calculator.test.ts       # Vitest unit tests for the calculation engine
@@ -48,7 +50,7 @@ factorecipe/
 │   │   │   └── Navbar.tsx           # Global navigation header, database selector, tab navigation
 │   │   ├── calculator/
 │   │   │   ├── CalculatorView.tsx   # Goal rate controls, high-level metrics, view switcher (graph/table/checklist)
-│   │   │   └── FlowGraph.tsx        # Interactive SVG canvas (zoom/pan, bezier flow edges, node cards)
+│   │   │   └── FlowGraph.tsx        # Interactive SVG canvas (mouse/touch pan, wheel/pinch zoom, bezier flow edges, node cards)
 │   │   ├── recipes/
 │   │   │   └── RecipeCatalog.tsx    # Recipe search, category filtering, unlock toggles, recipe modal
 │   │   ├── items/

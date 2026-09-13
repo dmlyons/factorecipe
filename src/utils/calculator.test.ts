@@ -274,6 +274,66 @@ describe('calculateProductionChain', () => {
     const dust = result.intermediates.find((i) => i.itemId === 'dust');
     expect(dust?.producedPerMin).toBeCloseTo(30);
   });
+
+  it('falls back to a crafter matching the recipe category when no preferred/default crafter is set', () => {
+    const database = db({
+      items: [item('ore', { isRaw: true }), item('plate')],
+      crafters: [crafter('foundry', { category: 'Smelting' }), crafter('assembler', { category: 'Crafting' })],
+      recipes: [
+        recipe('smelt-plate', {
+          category: 'Smelting',
+          ingredients: [{ itemId: 'ore', amount: 1 }],
+          products: [{ itemId: 'plate', amount: 1 }],
+          // No defaultCrafterId, and no preferredCrafters override supplied below.
+        }),
+      ],
+    });
+    const result = calculateProductionChain('plate', 60, 'per_minute', database);
+    expect(result.nodes[0].crafterId).toBe('foundry');
+  });
+
+  it('falls back to a generic zero-power crafter without crashing when the database has no crafters', () => {
+    const database = db({
+      items: [item('ore', { isRaw: true }), item('plate')],
+      crafters: [],
+      recipes: [
+        recipe('smelt-plate', {
+          ingredients: [{ itemId: 'ore', amount: 1 }],
+          products: [{ itemId: 'plate', amount: 1 }],
+        }),
+      ],
+    });
+    const result = calculateProductionChain('plate', 60, 'per_minute', database);
+    expect(result.nodes[0].crafterId).toBe('generic-crafter');
+    expect(result.totalPowerKW).toBe(0);
+  });
+
+  it('aggregates machine counts and power across separate recipes sharing the same crafter', () => {
+    const database = db({
+      items: [item('ore', { isRaw: true }), item('plate'), item('widget')],
+      crafters: [crafter('machine', { speed: 1, powerKW: 100 })],
+      recipes: [
+        recipe('smelt-plate', {
+          craftTime: 1,
+          ingredients: [{ itemId: 'ore', amount: 1 }],
+          products: [{ itemId: 'plate', amount: 1 }],
+          defaultCrafterId: 'machine',
+        }),
+        recipe('assemble-widget', {
+          craftTime: 1,
+          ingredients: [{ itemId: 'plate', amount: 2 }],
+          products: [{ itemId: 'widget', amount: 1 }],
+          defaultCrafterId: 'machine',
+        }),
+      ],
+    });
+    // 60 widget/min needs 120 plate/min: assemble-widget needs 1 machine, smelt-plate needs 2,
+    // and both recipes share crafter "machine" so their totals must combine into one entry.
+    const result = calculateProductionChain('widget', 60, 'per_minute', database);
+    expect(result.machineRequirements).toEqual([
+      expect.objectContaining({ crafterId: 'machine', totalExact: 3, totalCeil: 3, totalPowerKW: 300 }),
+    ]);
+  });
 });
 
 describe('formatRate', () => {
