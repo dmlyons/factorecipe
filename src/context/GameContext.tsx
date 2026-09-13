@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import {
   GameDatabase,
   Item,
@@ -13,6 +13,14 @@ import {
 import { STARTER_PRESET, PRESETS } from '../data/presets';
 import { calculateProductionChain } from '../utils/calculator';
 import confetti from 'canvas-confetti';
+import {
+  STORAGE_KEY_DATABASES,
+  STORAGE_KEY_ACTIVE_DB,
+  STORAGE_KEY_PROGRESSION,
+  STORAGE_KEY_GOALS,
+  STORAGE_KEY_PREF_RECIPES,
+  STORAGE_KEY_PREF_CRAFTERS,
+} from './storageKeys';
 
 interface GameContextType {
   databases: GameDatabase[];
@@ -91,14 +99,26 @@ interface GameContextType {
   // Search/Filter helper
   searchQuery: string;
   setSearchQuery: (q: string) => void;
+
+  // Toast notifications (replaces window.alert for non-blocking messages)
+  toast: string | null;
+  showToast: (message: string) => void;
+  dismissToast: () => void;
 }
 
-const STORAGE_KEY_DATABASES = 'factorecipe_databases_v1';
-const STORAGE_KEY_ACTIVE_DB = 'factorecipe_active_db_v1';
-const STORAGE_KEY_PROGRESSION = 'factorecipe_progression_v1';
-const STORAGE_KEY_GOALS = 'factorecipe_goals_v1';
-const STORAGE_KEY_PREF_RECIPES = 'factorecipe_pref_recipes_v1';
-const STORAGE_KEY_PREF_CRAFTERS = 'factorecipe_pref_crafters_v1';
+/**
+ * Persists a value to `localStorage`, tolerating quota-exceeded errors and private-browsing
+ * modes that block writes — the same defensive posture already used for the read side (see
+ * the `try`/`catch` around each `JSON.parse` below). A failed write only means the next visit
+ * falls back to whatever was last successfully persisted; it must never crash the app.
+ */
+function persistToStorage(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    console.error(`Failed to persist "${key}" to storage`, e);
+  }
+}
 
 /** Loosely-typed shape of user-supplied import JSON: either a single sandbox or a full backup. */
 type ImportPayload = Partial<FullBackupExport> & Partial<GameDatabase>;
@@ -151,11 +171,17 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   });
 
-  const progression: UserProgression = allProgressions[activeDatabase.id] || {
-    unlockedRecipeIds: activeDatabase.recipes.filter((r) => r.unlockedByDefault).map((r) => r.id),
-    pinnedItemIds: [],
-    completedChecklistIds: [],
-  };
+  const progression: UserProgression = useMemo(
+    () =>
+      allProgressions[activeDatabase.id] || {
+        unlockedRecipeIds: activeDatabase.recipes
+          .filter((r) => r.unlockedByDefault)
+          .map((r) => r.id),
+        pinnedItemIds: [],
+        completedChecklistIds: [],
+      },
+    [allProgressions, activeDatabase],
+  );
 
   // Goals
   const [goals, setGoals] = useState<ProductionGoal[]>(() => {
@@ -202,47 +228,62 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [importExportModalTab, setImportExportModalTab] = useState<'import' | 'export'>('export');
 
-  const openImportExportModal = (tab: 'import' | 'export' = 'export') => {
+  const openImportExportModal = useCallback((tab: 'import' | 'export' = 'export') => {
     setImportExportModalTab(tab);
     setIsImportExportModalOpen(true);
-  };
+  }, []);
 
-  const closeImportExportModal = () => {
+  const closeImportExportModal = useCallback(() => {
     setIsImportExportModalOpen(false);
-  };
+  }, []);
+
+  // Toast notifications (replaces window.alert)
+  const [toast, setToast] = useState<string | null>(null);
+
+  const showToast = useCallback((message: string) => setToast(message), []);
+  const dismissToast = useCallback(() => setToast(null), []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 5000);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   // Save changes to localStorage
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_DATABASES, JSON.stringify(databases));
+    persistToStorage(STORAGE_KEY_DATABASES, JSON.stringify(databases));
   }, [databases]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_ACTIVE_DB, activeDatabaseId);
+    persistToStorage(STORAGE_KEY_ACTIVE_DB, activeDatabaseId);
   }, [activeDatabaseId]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PROGRESSION, JSON.stringify(allProgressions));
+    persistToStorage(STORAGE_KEY_PROGRESSION, JSON.stringify(allProgressions));
   }, [allProgressions]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_GOALS, JSON.stringify(goals));
+    persistToStorage(STORAGE_KEY_GOALS, JSON.stringify(goals));
   }, [goals]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PREF_RECIPES, JSON.stringify(preferredRecipes));
+    persistToStorage(STORAGE_KEY_PREF_RECIPES, JSON.stringify(preferredRecipes));
   }, [preferredRecipes]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PREF_CRAFTERS, JSON.stringify(preferredCrafters));
+    persistToStorage(STORAGE_KEY_PREF_CRAFTERS, JSON.stringify(preferredCrafters));
   }, [preferredCrafters]);
 
   // Helper to update active database
-  const updateActiveDatabase = (updater: (db: GameDatabase) => GameDatabase) => {
-    setDatabases((prev) => prev.map((db) => (db.id === activeDatabase.id ? updater(db) : db)));
-  };
+  const updateActiveDatabase = useCallback(
+    (updater: (db: GameDatabase) => GameDatabase) => {
+      setDatabases((prev) => prev.map((db) => (db.id === activeDatabase.id ? updater(db) : db)));
+    },
+    [activeDatabase.id],
+  );
 
   // Database Management
-  const createDatabase = (name: string, description: string, icon: string) => {
+  const createDatabase = useCallback((name: string, description: string, icon: string) => {
     const newDb: GameDatabase = {
       id: `game-${Date.now()}`,
       name,
@@ -267,35 +308,41 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     setDatabases((prev) => [...prev, newDb]);
     setActiveDatabaseId(newDb.id);
-  };
+  }, []);
 
-  const updateDatabaseMeta = (name: string, description: string, icon: string) => {
-    updateActiveDatabase((db) => ({
-      ...db,
-      name,
-      description,
-      icon,
-    }));
-  };
+  const updateDatabaseMeta = useCallback(
+    (name: string, description: string, icon: string) => {
+      updateActiveDatabase((db) => ({
+        ...db,
+        name,
+        description,
+        icon,
+      }));
+    },
+    [updateActiveDatabase],
+  );
 
-  const deleteDatabase = (id: string) => {
-    if (databases.length <= 1) {
-      alert('Cannot delete the last remaining factory database.');
-      return;
-    }
-    const remaining = databases.filter((db) => db.id !== id);
-    setDatabases(remaining);
-    if (activeDatabaseId === id) {
-      setActiveDatabaseId(remaining[0].id);
-    }
-  };
+  const deleteDatabase = useCallback(
+    (id: string) => {
+      if (databases.length <= 1) {
+        setToast('Cannot delete the last remaining factory database.');
+        return;
+      }
+      const remaining = databases.filter((db) => db.id !== id);
+      setDatabases(remaining);
+      if (activeDatabaseId === id) {
+        setActiveDatabaseId(remaining[0].id);
+      }
+    },
+    [databases, activeDatabaseId],
+  );
 
-  const resetToDefaultPreset = () => {
+  const resetToDefaultPreset = useCallback(() => {
     setDatabases(PRESETS);
     setActiveDatabaseId(STARTER_PRESET.id);
-  };
+  }, []);
 
-  const validateImportJson = (jsonContent: string): ImportPreview => {
+  const validateImportJson = useCallback((jsonContent: string): ImportPreview => {
     try {
       const parsed = JSON.parse(jsonContent) as ImportPayload;
       if (!parsed || typeof parsed !== 'object') {
@@ -381,109 +428,118 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         errors: [`JSON Syntax Error: ${(e as Error).message}`],
       };
     }
-  };
+  }, []);
 
-  const importDatabase = (
-    jsonContent: string,
-    mode: 'new' | 'overwrite' = 'new',
-  ): { success: boolean; message: string } => {
-    const preview = validateImportJson(jsonContent);
-    if (preview.type === 'invalid') {
-      return { success: false, message: preview.errors.join(' ') };
-    }
+  const importDatabase = useCallback(
+    (
+      jsonContent: string,
+      mode: 'new' | 'overwrite' = 'new',
+    ): { success: boolean; message: string } => {
+      const preview = validateImportJson(jsonContent);
+      if (preview.type === 'invalid') {
+        return { success: false, message: preview.errors.join(' ') };
+      }
 
-    try {
-      const parsed = JSON.parse(jsonContent) as ImportPayload;
+      try {
+        const parsed = JSON.parse(jsonContent) as ImportPayload;
 
-      // Handle Full Backup restoration
-      if (preview.type === 'full_backup') {
-        const dbs = Array.isArray(parsed.databases) ? parsed.databases : [];
-        if (dbs.length === 0) {
-          return { success: false, message: 'Backup contains no databases.' };
+        // Handle Full Backup restoration
+        if (preview.type === 'full_backup') {
+          const dbs = Array.isArray(parsed.databases) ? parsed.databases : [];
+          if (dbs.length === 0) {
+            return { success: false, message: 'Backup contains no databases.' };
+          }
+          setDatabases(dbs);
+          setActiveDatabaseId(dbs[0].id);
+          if (parsed.progression && typeof parsed.progression === 'object') {
+            setAllProgressions(parsed.progression);
+          }
+          if (Array.isArray(parsed.goals)) {
+            setGoals(parsed.goals);
+          }
+          return {
+            success: true,
+            message: `Successfully restored full backup with ${dbs.length} sandbox(es).`,
+          };
         }
-        setDatabases(dbs);
-        setActiveDatabaseId(dbs[0].id);
-        if (parsed.progression && typeof parsed.progression === 'object') {
-          setAllProgressions(parsed.progression);
+
+        // Handle Single Sandbox import
+        const importedDb: GameDatabase = {
+          id:
+            mode === 'overwrite'
+              ? activeDatabase.id
+              : `game-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          name: parsed.name || 'Imported Sandbox',
+          version: parsed.version || '1.0.0',
+          description: parsed.description || '',
+          icon: parsed.icon || '🏭',
+          categories: Array.isArray(parsed.categories)
+            ? parsed.categories
+            : ['Raw Resources', 'Crafted'],
+          items: Array.isArray(parsed.items) ? parsed.items : [],
+          crafters: Array.isArray(parsed.crafters) ? parsed.crafters : [],
+          recipes: Array.isArray(parsed.recipes) ? parsed.recipes : [],
+        };
+
+        if (mode === 'overwrite') {
+          setDatabases((prev) => prev.map((db) => (db.id === activeDatabase.id ? importedDb : db)));
+        } else {
+          setDatabases((prev) => [...prev, importedDb]);
+          setActiveDatabaseId(importedDb.id);
         }
-        if (Array.isArray(parsed.goals)) {
-          setGoals(parsed.goals);
-        }
+
+        // Initialize progression for unlockedByDefault recipes
+        const unlocked = importedDb.recipes.filter((r) => r.unlockedByDefault).map((r) => r.id);
+        setAllProgressions((prev) => ({
+          ...prev,
+          [importedDb.id]: {
+            unlockedRecipeIds: unlocked,
+            pinnedItemIds: [],
+            completedChecklistIds: [],
+          },
+        }));
+
         return {
           success: true,
-          message: `Successfully restored full backup with ${dbs.length} sandbox(es).`,
+          message: `Successfully imported "${importedDb.name}" (${importedDb.items.length} items, ${importedDb.recipes.length} recipes).`,
         };
+      } catch (e) {
+        return { success: false, message: `Import error: ${(e as Error).message}` };
       }
+    },
+    [activeDatabase.id, validateImportJson],
+  );
 
-      // Handle Single Sandbox import
-      const importedDb: GameDatabase = {
-        id:
-          mode === 'overwrite'
-            ? activeDatabase.id
-            : `game-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-        name: parsed.name || 'Imported Sandbox',
-        version: parsed.version || '1.0.0',
-        description: parsed.description || '',
-        icon: parsed.icon || '🏭',
-        categories: Array.isArray(parsed.categories)
-          ? parsed.categories
-          : ['Raw Resources', 'Crafted'],
-        items: Array.isArray(parsed.items) ? parsed.items : [],
-        crafters: Array.isArray(parsed.crafters) ? parsed.crafters : [],
-        recipes: Array.isArray(parsed.recipes) ? parsed.recipes : [],
-      };
+  const exportDatabaseJson = useCallback(
+    (databaseId?: string): string => {
+      const targetDb = databaseId
+        ? databases.find((d) => d.id === databaseId) || activeDatabase
+        : activeDatabase;
+      return JSON.stringify(targetDb, null, 2);
+    },
+    [databases, activeDatabase],
+  );
 
-      if (mode === 'overwrite') {
-        setDatabases((prev) => prev.map((db) => (db.id === activeDatabase.id ? importedDb : db)));
-      } else {
-        setDatabases((prev) => [...prev, importedDb]);
-        setActiveDatabaseId(importedDb.id);
-      }
+  const downloadDatabaseJson = useCallback(
+    (databaseId?: string) => {
+      const targetDb = databaseId
+        ? databases.find((d) => d.id === databaseId) || activeDatabase
+        : activeDatabase;
+      const jsonStr = exportDatabaseJson(targetDb.id);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.href = url;
+      downloadAnchor.download = `${targetDb.name.toLowerCase().replace(/[^a-z0-9]+/g, '_')}_factorecipe.json`;
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      URL.revokeObjectURL(url);
+    },
+    [databases, activeDatabase, exportDatabaseJson],
+  );
 
-      // Initialize progression for unlockedByDefault recipes
-      const unlocked = importedDb.recipes.filter((r) => r.unlockedByDefault).map((r) => r.id);
-      setAllProgressions((prev) => ({
-        ...prev,
-        [importedDb.id]: {
-          unlockedRecipeIds: unlocked,
-          pinnedItemIds: [],
-          completedChecklistIds: [],
-        },
-      }));
-
-      return {
-        success: true,
-        message: `Successfully imported "${importedDb.name}" (${importedDb.items.length} items, ${importedDb.recipes.length} recipes).`,
-      };
-    } catch (e) {
-      return { success: false, message: `Import error: ${(e as Error).message}` };
-    }
-  };
-
-  const exportDatabaseJson = (databaseId?: string): string => {
-    const targetDb = databaseId
-      ? databases.find((d) => d.id === databaseId) || activeDatabase
-      : activeDatabase;
-    return JSON.stringify(targetDb, null, 2);
-  };
-
-  const downloadDatabaseJson = (databaseId?: string) => {
-    const targetDb = databaseId
-      ? databases.find((d) => d.id === databaseId) || activeDatabase
-      : activeDatabase;
-    const jsonStr = exportDatabaseJson(targetDb.id);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.href = url;
-    downloadAnchor.download = `${targetDb.name.toLowerCase().replace(/[^a-z0-9]+/g, '_')}_factorecipe.json`;
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
-    URL.revokeObjectURL(url);
-  };
-
-  const exportFullBackupJson = (): string => {
+  const exportFullBackupJson = useCallback((): string => {
     const backup: FullBackupExport = {
       factorecipe_backup_version: '1.0.0',
       exportedAt: new Date().toISOString(),
@@ -492,9 +548,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       goals,
     };
     return JSON.stringify(backup, null, 2);
-  };
+  }, [databases, allProgressions, goals]);
 
-  const downloadFullBackupJson = () => {
+  const downloadFullBackupJson = useCallback(() => {
     const jsonStr = exportFullBackupJson();
     const blob = new Blob([jsonStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -505,298 +561,394 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     downloadAnchor.click();
     downloadAnchor.remove();
     URL.revokeObjectURL(url);
-  };
+  }, [exportFullBackupJson]);
 
-  const exportDatabase = () => {
+  const exportDatabase = useCallback(() => {
     downloadDatabaseJson();
-  };
+  }, [downloadDatabaseJson]);
 
   // Item CRUD
-  const addItem = (itemData: Omit<Item, 'id'>) => {
-    const newItem: Item = {
-      ...itemData,
-      id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-    };
-    updateActiveDatabase((db) => ({
-      ...db,
-      items: [...db.items, newItem],
-      categories: db.categories.includes(newItem.category)
-        ? db.categories
-        : [...db.categories, newItem.category],
-    }));
-  };
+  const addItem = useCallback(
+    (itemData: Omit<Item, 'id'>) => {
+      const newItem: Item = {
+        ...itemData,
+        id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      };
+      updateActiveDatabase((db) => ({
+        ...db,
+        items: [...db.items, newItem],
+        categories: db.categories.includes(newItem.category)
+          ? db.categories
+          : [...db.categories, newItem.category],
+      }));
+    },
+    [updateActiveDatabase],
+  );
 
-  const updateItem = (updatedItem: Item) => {
-    updateActiveDatabase((db) => ({
-      ...db,
-      items: db.items.map((i) => (i.id === updatedItem.id ? updatedItem : i)),
-      categories: db.categories.includes(updatedItem.category)
-        ? db.categories
-        : [...db.categories, updatedItem.category],
-    }));
-  };
+  const updateItem = useCallback(
+    (updatedItem: Item) => {
+      updateActiveDatabase((db) => ({
+        ...db,
+        items: db.items.map((i) => (i.id === updatedItem.id ? updatedItem : i)),
+        categories: db.categories.includes(updatedItem.category)
+          ? db.categories
+          : [...db.categories, updatedItem.category],
+      }));
+    },
+    [updateActiveDatabase],
+  );
 
-  const deleteItem = (itemId: string) => {
-    updateActiveDatabase((db) => ({
-      ...db,
-      items: db.items.filter((i) => i.id !== itemId),
-      recipes: db.recipes
-        .filter((r) => !r.products.some((p) => p.itemId === itemId))
-        .map((r) => ({
-          ...r,
-          ingredients: r.ingredients.filter((ing) => ing.itemId !== itemId),
-        })),
-    }));
-  };
+  const deleteItem = useCallback(
+    (itemId: string) => {
+      updateActiveDatabase((db) => ({
+        ...db,
+        items: db.items.filter((i) => i.id !== itemId),
+        recipes: db.recipes
+          .filter((r) => !r.products.some((p) => p.itemId === itemId))
+          .map((r) => ({
+            ...r,
+            ingredients: r.ingredients.filter((ing) => ing.itemId !== itemId),
+          })),
+      }));
+    },
+    [updateActiveDatabase],
+  );
 
   // Crafter CRUD
-  const addCrafter = (crafterData: Omit<Crafter, 'id'>) => {
-    const newCrafter: Crafter = {
-      ...crafterData,
-      id: `crafter-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-    };
-    updateActiveDatabase((db) => ({
-      ...db,
-      crafters: [...db.crafters, newCrafter],
-    }));
-  };
+  const addCrafter = useCallback(
+    (crafterData: Omit<Crafter, 'id'>) => {
+      const newCrafter: Crafter = {
+        ...crafterData,
+        id: `crafter-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      };
+      updateActiveDatabase((db) => ({
+        ...db,
+        crafters: [...db.crafters, newCrafter],
+      }));
+    },
+    [updateActiveDatabase],
+  );
 
-  const updateCrafter = (updatedCrafter: Crafter) => {
-    updateActiveDatabase((db) => ({
-      ...db,
-      crafters: db.crafters.map((c) => (c.id === updatedCrafter.id ? updatedCrafter : c)),
-    }));
-  };
+  const updateCrafter = useCallback(
+    (updatedCrafter: Crafter) => {
+      updateActiveDatabase((db) => ({
+        ...db,
+        crafters: db.crafters.map((c) => (c.id === updatedCrafter.id ? updatedCrafter : c)),
+      }));
+    },
+    [updateActiveDatabase],
+  );
 
-  const deleteCrafter = (crafterId: string) => {
-    updateActiveDatabase((db) => ({
-      ...db,
-      crafters: db.crafters.filter((c) => c.id !== crafterId),
-    }));
-  };
+  const deleteCrafter = useCallback(
+    (crafterId: string) => {
+      updateActiveDatabase((db) => ({
+        ...db,
+        crafters: db.crafters.filter((c) => c.id !== crafterId),
+      }));
+    },
+    [updateActiveDatabase],
+  );
 
   // Recipe CRUD
-  const addRecipe = (recipeData: Omit<Recipe, 'id'>) => {
-    const newRecipe: Recipe = {
-      ...recipeData,
-      id: `recipe-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-    };
-    updateActiveDatabase((db) => ({
-      ...db,
-      recipes: [...db.recipes, newRecipe],
-    }));
-  };
+  const addRecipe = useCallback(
+    (recipeData: Omit<Recipe, 'id'>) => {
+      const newRecipe: Recipe = {
+        ...recipeData,
+        id: `recipe-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      };
+      updateActiveDatabase((db) => ({
+        ...db,
+        recipes: [...db.recipes, newRecipe],
+      }));
+    },
+    [updateActiveDatabase],
+  );
 
-  const updateRecipe = (updatedRecipe: Recipe) => {
-    updateActiveDatabase((db) => ({
-      ...db,
-      recipes: db.recipes.map((r) => (r.id === updatedRecipe.id ? updatedRecipe : r)),
-    }));
-  };
+  const updateRecipe = useCallback(
+    (updatedRecipe: Recipe) => {
+      updateActiveDatabase((db) => ({
+        ...db,
+        recipes: db.recipes.map((r) => (r.id === updatedRecipe.id ? updatedRecipe : r)),
+      }));
+    },
+    [updateActiveDatabase],
+  );
 
-  const deleteRecipe = (recipeId: string) => {
-    updateActiveDatabase((db) => ({
-      ...db,
-      recipes: db.recipes.filter((r) => r.id !== recipeId),
-    }));
-  };
+  const deleteRecipe = useCallback(
+    (recipeId: string) => {
+      updateActiveDatabase((db) => ({
+        ...db,
+        recipes: db.recipes.filter((r) => r.id !== recipeId),
+      }));
+    },
+    [updateActiveDatabase],
+  );
 
   // Progression handlers
-  const updateActiveProgression = (updater: (p: UserProgression) => UserProgression) => {
-    setAllProgressions((prev) => {
-      const current = prev[activeDatabase.id] || {
-        unlockedRecipeIds: activeDatabase.recipes
-          .filter((r) => r.unlockedByDefault)
-          .map((r) => r.id),
-        pinnedItemIds: [],
-        completedChecklistIds: [],
-      };
-      return {
-        ...prev,
-        [activeDatabase.id]: updater(current),
-      };
-    });
-  };
+  const updateActiveProgression = useCallback(
+    (updater: (p: UserProgression) => UserProgression) => {
+      setAllProgressions((prev) => {
+        const current = prev[activeDatabase.id] || {
+          unlockedRecipeIds: activeDatabase.recipes
+            .filter((r) => r.unlockedByDefault)
+            .map((r) => r.id),
+          pinnedItemIds: [],
+          completedChecklistIds: [],
+        };
+        return {
+          ...prev,
+          [activeDatabase.id]: updater(current),
+        };
+      });
+    },
+    [activeDatabase.id, activeDatabase.recipes],
+  );
 
-  const toggleRecipeUnlocked = (recipeId: string) => {
-    updateActiveProgression((p) => {
-      const isUnlocked = p.unlockedRecipeIds.includes(recipeId);
-      const next = isUnlocked
-        ? p.unlockedRecipeIds.filter((id) => id !== recipeId)
-        : [...p.unlockedRecipeIds, recipeId];
+  const toggleRecipeUnlocked = useCallback(
+    (recipeId: string) => {
+      updateActiveProgression((p) => {
+        const isUnlocked = p.unlockedRecipeIds.includes(recipeId);
+        const next = isUnlocked
+          ? p.unlockedRecipeIds.filter((id) => id !== recipeId)
+          : [...p.unlockedRecipeIds, recipeId];
 
-      if (!isUnlocked) {
-        void confetti({
-          particleCount: 40,
-          spread: 50,
-          origin: { y: 0.8 },
-        });
-      }
+        if (!isUnlocked) {
+          void confetti({
+            particleCount: 40,
+            spread: 50,
+            origin: { y: 0.8 },
+          });
+        }
 
-      return {
-        ...p,
-        unlockedRecipeIds: next,
-      };
-    });
-  };
+        return {
+          ...p,
+          unlockedRecipeIds: next,
+        };
+      });
+    },
+    [updateActiveProgression],
+  );
 
-  const toggleItemPinned = (itemId: string) => {
-    updateActiveProgression((p) => {
-      const isPinned = p.pinnedItemIds.includes(itemId);
-      return {
-        ...p,
-        pinnedItemIds: isPinned
-          ? p.pinnedItemIds.filter((id) => id !== itemId)
-          : [...p.pinnedItemIds, itemId],
-      };
-    });
-  };
+  const toggleItemPinned = useCallback(
+    (itemId: string) => {
+      updateActiveProgression((p) => {
+        const isPinned = p.pinnedItemIds.includes(itemId);
+        return {
+          ...p,
+          pinnedItemIds: isPinned
+            ? p.pinnedItemIds.filter((id) => id !== itemId)
+            : [...p.pinnedItemIds, itemId],
+        };
+      });
+    },
+    [updateActiveProgression],
+  );
 
-  const toggleChecklistItem = (key: string) => {
-    updateActiveProgression((p) => {
-      const isDone = p.completedChecklistIds.includes(key);
-      const next = isDone
-        ? p.completedChecklistIds.filter((k) => k !== key)
-        : [...p.completedChecklistIds, key];
+  const toggleChecklistItem = useCallback(
+    (key: string) => {
+      updateActiveProgression((p) => {
+        const isDone = p.completedChecklistIds.includes(key);
+        const next = isDone
+          ? p.completedChecklistIds.filter((k) => k !== key)
+          : [...p.completedChecklistIds, key];
 
-      if (!isDone) {
-        void confetti({
-          particleCount: 25,
-          spread: 40,
-          origin: { y: 0.85 },
-        });
-      }
+        if (!isDone) {
+          void confetti({
+            particleCount: 25,
+            spread: 40,
+            origin: { y: 0.85 },
+          });
+        }
 
-      return {
-        ...p,
-        completedChecklistIds: next,
-      };
-    });
-  };
+        return {
+          ...p,
+          completedChecklistIds: next,
+        };
+      });
+    },
+    [updateActiveProgression],
+  );
 
-  const unlockAllRecipes = () => {
+  const unlockAllRecipes = useCallback(() => {
     updateActiveProgression((p) => ({
       ...p,
       unlockedRecipeIds: activeDatabase.recipes.map((r) => r.id),
     }));
-  };
+  }, [updateActiveProgression, activeDatabase.recipes]);
 
-  const lockAllRecipes = () => {
+  const lockAllRecipes = useCallback(() => {
     updateActiveProgression((p) => ({
       ...p,
       unlockedRecipeIds: [],
     }));
-  };
+  }, [updateActiveProgression]);
 
   // Goals
-  const addGoal = (
-    itemId: string,
-    targetRate: number,
-    unit: 'per_minute' | 'per_second' = 'per_minute',
-  ) => {
-    const newGoal: ProductionGoal = {
-      id: `goal-${Date.now()}`,
-      itemId,
-      targetRate,
-      unit,
-      active: true,
-    };
-    setGoals((prev) => [newGoal, ...prev]);
-    setActiveGoalId(newGoal.id);
-  };
+  const addGoal = useCallback(
+    (itemId: string, targetRate: number, unit: 'per_minute' | 'per_second' = 'per_minute') => {
+      const newGoal: ProductionGoal = {
+        id: `goal-${Date.now()}`,
+        itemId,
+        targetRate,
+        unit,
+        active: true,
+      };
+      setGoals((prev) => [newGoal, ...prev]);
+      setActiveGoalId(newGoal.id);
+    },
+    [],
+  );
 
-  const updateGoal = (updatedGoal: ProductionGoal) => {
+  const updateGoal = useCallback((updatedGoal: ProductionGoal) => {
     setGoals((prev) => prev.map((g) => (g.id === updatedGoal.id ? updatedGoal : g)));
-  };
+  }, []);
 
-  const deleteGoal = (goalId: string) => {
-    setGoals((prev) => prev.filter((g) => g.id !== goalId));
-    if (activeGoalId === goalId) {
-      const remaining = goals.filter((g) => g.id !== goalId);
-      setActiveGoalId(remaining.length > 0 ? remaining[0].id : null);
-    }
-  };
+  const deleteGoal = useCallback(
+    (goalId: string) => {
+      setGoals((prev) => prev.filter((g) => g.id !== goalId));
+      if (activeGoalId === goalId) {
+        const remaining = goals.filter((g) => g.id !== goalId);
+        setActiveGoalId(remaining.length > 0 ? remaining[0].id : null);
+      }
+    },
+    [activeGoalId, goals],
+  );
 
-  const setPreferredRecipe = (itemId: string, recipeId: string) => {
+  const setPreferredRecipe = useCallback((itemId: string, recipeId: string) => {
     setPreferredRecipes((prev) => ({ ...prev, [itemId]: recipeId }));
-  };
+  }, []);
 
-  const setPreferredCrafter = (recipeId: string, crafterId: string) => {
+  const setPreferredCrafter = useCallback((recipeId: string, crafterId: string) => {
     setPreferredCrafters((prev) => ({ ...prev, [recipeId]: crafterId }));
-  };
+  }, []);
 
   // Active goal & calculation
   const activeGoal =
     goals.find((g) => g.id === activeGoalId) || (goals.length > 0 ? goals[0] : null);
 
-  const activeCalculation: CalculationBreakdown | null = activeGoal
-    ? calculateProductionChain(
-        activeGoal.itemId,
-        activeGoal.targetRate,
-        activeGoal.unit,
-        activeDatabase,
-        preferredRecipes,
-        preferredCrafters,
-      )
-    : null;
-
-  return (
-    <GameContext.Provider
-      value={{
-        databases,
-        activeDatabase,
-        activeDatabaseId,
-        setActiveDatabaseId,
-        createDatabase,
-        updateDatabaseMeta,
-        deleteDatabase,
-        resetToDefaultPreset,
-        importDatabase,
-        exportDatabase,
-        exportDatabaseJson,
-        downloadDatabaseJson,
-        exportFullBackupJson,
-        downloadFullBackupJson,
-        validateImportJson,
-        isImportExportModalOpen,
-        openImportExportModal,
-        closeImportExportModal,
-        importExportModalTab,
-        addItem,
-        updateItem,
-        deleteItem,
-        addCrafter,
-        updateCrafter,
-        deleteCrafter,
-        addRecipe,
-        updateRecipe,
-        deleteRecipe,
-        progression,
-        toggleRecipeUnlocked,
-        toggleItemPinned,
-        toggleChecklistItem,
-        unlockAllRecipes,
-        lockAllRecipes,
-        goals,
-        activeGoal,
-        addGoal,
-        updateGoal,
-        deleteGoal,
-        setActiveGoalId,
-        preferredRecipes,
-        setPreferredRecipe,
-        preferredCrafters,
-        setPreferredCrafter,
-        activeCalculation,
-        activeTab,
-        setActiveTab,
-        searchQuery,
-        setSearchQuery,
-      }}
-    >
-      {children}
-    </GameContext.Provider>
+  const activeCalculation = useMemo<CalculationBreakdown | null>(
+    () =>
+      activeGoal
+        ? calculateProductionChain(
+            activeGoal.itemId,
+            activeGoal.targetRate,
+            activeGoal.unit,
+            activeDatabase,
+            preferredRecipes,
+            preferredCrafters,
+          )
+        : null,
+    [activeGoal, activeDatabase, preferredRecipes, preferredCrafters],
   );
+
+  const value = useMemo<GameContextType>(
+    () => ({
+      databases,
+      activeDatabase,
+      activeDatabaseId,
+      setActiveDatabaseId,
+      createDatabase,
+      updateDatabaseMeta,
+      deleteDatabase,
+      resetToDefaultPreset,
+      importDatabase,
+      exportDatabase,
+      exportDatabaseJson,
+      downloadDatabaseJson,
+      exportFullBackupJson,
+      downloadFullBackupJson,
+      validateImportJson,
+      isImportExportModalOpen,
+      openImportExportModal,
+      closeImportExportModal,
+      importExportModalTab,
+      addItem,
+      updateItem,
+      deleteItem,
+      addCrafter,
+      updateCrafter,
+      deleteCrafter,
+      addRecipe,
+      updateRecipe,
+      deleteRecipe,
+      progression,
+      toggleRecipeUnlocked,
+      toggleItemPinned,
+      toggleChecklistItem,
+      unlockAllRecipes,
+      lockAllRecipes,
+      goals,
+      activeGoal,
+      addGoal,
+      updateGoal,
+      deleteGoal,
+      setActiveGoalId,
+      preferredRecipes,
+      setPreferredRecipe,
+      preferredCrafters,
+      setPreferredCrafter,
+      activeCalculation,
+      activeTab,
+      setActiveTab,
+      searchQuery,
+      setSearchQuery,
+      toast,
+      showToast,
+      dismissToast,
+    }),
+    [
+      databases,
+      activeDatabase,
+      activeDatabaseId,
+      createDatabase,
+      updateDatabaseMeta,
+      deleteDatabase,
+      resetToDefaultPreset,
+      importDatabase,
+      exportDatabase,
+      exportDatabaseJson,
+      downloadDatabaseJson,
+      exportFullBackupJson,
+      downloadFullBackupJson,
+      validateImportJson,
+      isImportExportModalOpen,
+      openImportExportModal,
+      closeImportExportModal,
+      importExportModalTab,
+      addItem,
+      updateItem,
+      deleteItem,
+      addCrafter,
+      updateCrafter,
+      deleteCrafter,
+      addRecipe,
+      updateRecipe,
+      deleteRecipe,
+      progression,
+      toggleRecipeUnlocked,
+      toggleItemPinned,
+      toggleChecklistItem,
+      unlockAllRecipes,
+      lockAllRecipes,
+      goals,
+      activeGoal,
+      addGoal,
+      updateGoal,
+      deleteGoal,
+      preferredRecipes,
+      setPreferredRecipe,
+      preferredCrafters,
+      setPreferredCrafter,
+      activeCalculation,
+      activeTab,
+      searchQuery,
+      toast,
+      showToast,
+      dismissToast,
+    ],
+  );
+
+  return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 };
 
 export const useGame = (): GameContextType => {

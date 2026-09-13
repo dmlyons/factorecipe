@@ -1,5 +1,6 @@
 import React from 'react';
 import { GameProvider, useGame } from './context/GameContext';
+import { ConfirmDialogProvider } from './context/ConfirmDialogContext';
 import { Navbar } from './components/layout/Navbar';
 import { CalculatorView } from './components/calculator/CalculatorView';
 import { RecipeCatalog } from './components/recipes/RecipeCatalog';
@@ -8,6 +9,7 @@ import { CraftersView } from './components/crafters/CraftersView';
 import { ProgressionView } from './components/progression/ProgressionView';
 import { DatabaseSettings } from './components/settings/DatabaseSettings';
 import { ImportExportModal } from './components/modals/ImportExportModal';
+import { Toast } from './components/common/Toast';
 
 const MainContent: React.FC = () => {
   const { activeTab } = useGame();
@@ -25,7 +27,13 @@ const MainContent: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  const { isImportExportModalOpen, closeImportExportModal, importExportModalTab } = useGame();
+  const {
+    isImportExportModalOpen,
+    closeImportExportModal,
+    importExportModalTab,
+    toast,
+    dismissToast,
+  } = useGame();
 
   return (
     <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col selection:bg-amber-500/30 selection:text-amber-200">
@@ -49,15 +57,18 @@ const AppContent: React.FC = () => {
         onClose={closeImportExportModal}
         defaultTab={importExportModalTab}
       />
+      <Toast message={toast} onDismiss={dismissToast} />
     </div>
   );
 };
 
 export function App() {
   return (
-    <GameProvider>
-      <AppContent />
-    </GameProvider>
+    <ConfirmDialogProvider>
+      <GameProvider>
+        <AppContent />
+      </GameProvider>
+    </ConfirmDialogProvider>
   );
 }
 

@@ -35,9 +35,13 @@ export default tseslint.config(
       // (set-state-in-effect, purity, immutability, …) this project doesn't opt into.
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
-      // GameContext.tsx intentionally colocates the `GameProvider` component with its
-      // `useGame` hook; that's the standard React context pattern, not a fast-refresh hazard.
-      'react-refresh/only-export-components': ['warn', { allowExportNames: ['useGame'] }],
+      // GameContext.tsx and ConfirmDialogContext.tsx intentionally colocate their provider
+      // component with a paired hook; that's the standard React context pattern, not a
+      // fast-refresh hazard.
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowExportNames: ['useGame', 'useConfirmDialog'] },
+      ],
       // tsc already enforces unused locals/params with noUnusedLocals/noUnusedParameters;
       // avoid a second, differently-configured source of truth for the same check.
       '@typescript-eslint/no-unused-vars': 'off',

@@ -333,7 +333,7 @@ export const CalculatorView: React.FC = () => {
             <span>⚠️ Production Warning:</span>
           </div>
           {activeCalculation.warnings.map((w, idx) => (
-            <div key={idx} className="pl-4">
+            <div key={`${idx}-${w}`} className="pl-4">
               • {w}
             </div>
           ))}

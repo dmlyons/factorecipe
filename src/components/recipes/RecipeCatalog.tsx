@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { useGame } from '../../context/GameContext';
+import { useConfirmDialog } from '../../context/ConfirmDialogContext';
 import { sortByName, sortStrings } from '../../utils/sort';
 import { Recipe, RecipeIngredient, RecipeProduct } from '../../types';
 import {
@@ -16,6 +17,10 @@ import {
   Cog,
 } from 'lucide-react';
 
+/** Draft ingredient/product row with a stable synthetic key, independent of its editable content. */
+type DraftIngredient = RecipeIngredient & { key: number };
+type DraftProduct = RecipeProduct & { key: number };
+
 export const RecipeCatalog: React.FC = () => {
   const {
     activeDatabase,
@@ -26,7 +31,9 @@ export const RecipeCatalog: React.FC = () => {
     deleteRecipe,
     addGoal,
     setActiveTab,
+    showToast,
   } = useGame();
+  const confirm = useConfirmDialog();
 
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -44,8 +51,9 @@ export const RecipeCatalog: React.FC = () => {
   const [formCraftTime, setFormCraftTime] = useState(1.0);
   const [formDefaultCrafterId, setFormDefaultCrafterId] = useState('');
   const [formUnlockedByDefault, setFormUnlockedByDefault] = useState(true);
-  const [formIngredients, setFormIngredients] = useState<RecipeIngredient[]>([]);
-  const [formProducts, setFormProducts] = useState<RecipeProduct[]>([]);
+  const [formIngredients, setFormIngredients] = useState<DraftIngredient[]>([]);
+  const [formProducts, setFormProducts] = useState<DraftProduct[]>([]);
+  const nextDraftKeyRef = useRef(0);
 
   const openCreateModal = () => {
     setEditingRecipe(null);
@@ -56,8 +64,8 @@ export const RecipeCatalog: React.FC = () => {
     setFormUnlockedByDefault(true);
 
     const firstItem = activeDatabase.items[0]?.id || '';
-    setFormIngredients([{ itemId: firstItem, amount: 1 }]);
-    setFormProducts([{ itemId: firstItem, amount: 1 }]);
+    setFormIngredients([{ key: nextDraftKeyRef.current++, itemId: firstItem, amount: 1 }]);
+    setFormProducts([{ key: nextDraftKeyRef.current++, itemId: firstItem, amount: 1 }]);
     setIsModalOpen(true);
   };
 
@@ -68,8 +76,10 @@ export const RecipeCatalog: React.FC = () => {
     setFormCraftTime(recipe.craftTime);
     setFormDefaultCrafterId(recipe.defaultCrafterId || activeDatabase.crafters[0]?.id || '');
     setFormUnlockedByDefault(recipe.unlockedByDefault ?? true);
-    setFormIngredients([...recipe.ingredients]);
-    setFormProducts([...recipe.products]);
+    setFormIngredients(
+      recipe.ingredients.map((ing) => ({ ...ing, key: nextDraftKeyRef.current++ })),
+    );
+    setFormProducts(recipe.products.map((prod) => ({ ...prod, key: nextDraftKeyRef.current++ })));
     setIsModalOpen(true);
   };
 
@@ -78,7 +88,7 @@ export const RecipeCatalog: React.FC = () => {
     if (!formName.trim()) return;
 
     if (formIngredients.length === 0 || formProducts.length === 0) {
-      alert('Recipe must have at least one ingredient and one product.');
+      showToast('Recipe must have at least one ingredient and one product.');
       return;
     }
 
@@ -88,8 +98,10 @@ export const RecipeCatalog: React.FC = () => {
       craftTime: Number(formCraftTime) || 1,
       defaultCrafterId: formDefaultCrafterId,
       unlockedByDefault: formUnlockedByDefault,
-      ingredients: formIngredients.filter((i) => i.amount > 0),
-      products: formProducts.filter((p) => p.amount > 0),
+      ingredients: formIngredients
+        .filter((i) => i.amount > 0)
+        .map(({ key: _key, ...rest }) => rest),
+      products: formProducts.filter((p) => p.amount > 0).map(({ key: _key, ...rest }) => rest),
     };
 
     if (editingRecipe) {
@@ -375,9 +387,12 @@ export const RecipeCatalog: React.FC = () => {
 
                   <button
                     onClick={() => {
-                      if (confirm(`Delete recipe "${recipe.name}"?`)) {
-                        deleteRecipe(recipe.id);
-                      }
+                      void (async () => {
+                        const confirmed = await confirm(`Delete recipe "${recipe.name}"?`);
+                        if (confirmed) {
+                          deleteRecipe(recipe.id);
+                        }
+                      })();
                     }}
                     className="p-1.5 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition"
                     title="Delete Recipe"
@@ -482,7 +497,10 @@ export const RecipeCatalog: React.FC = () => {
                     type="button"
                     onClick={() => {
                       const firstItem = activeDatabase.items[0]?.id || '';
-                      setFormIngredients((prev) => [...prev, { itemId: firstItem, amount: 1 }]);
+                      setFormIngredients((prev) => [
+                        ...prev,
+                        { key: nextDraftKeyRef.current++, itemId: firstItem, amount: 1 },
+                      ]);
                     }}
                     className="text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1"
                   >
@@ -491,7 +509,7 @@ export const RecipeCatalog: React.FC = () => {
                 </div>
 
                 {formIngredients.map((ing, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
+                  <div key={ing.key} className="flex items-center gap-2">
                     <select
                       value={ing.itemId}
                       onChange={(e) => {
@@ -542,7 +560,10 @@ export const RecipeCatalog: React.FC = () => {
                     type="button"
                     onClick={() => {
                       const firstItem = activeDatabase.items[0]?.id || '';
-                      setFormProducts((prev) => [...prev, { itemId: firstItem, amount: 1 }]);
+                      setFormProducts((prev) => [
+                        ...prev,
+                        { key: nextDraftKeyRef.current++, itemId: firstItem, amount: 1 },
+                      ]);
                     }}
                     className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1"
                   >
@@ -551,7 +572,7 @@ export const RecipeCatalog: React.FC = () => {
                 </div>
 
                 {formProducts.map((prod, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
+                  <div key={prod.key} className="flex items-center gap-2">
                     <select
                       value={prod.itemId}
                       onChange={(e) => {

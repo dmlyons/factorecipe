@@ -38,6 +38,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
     downloadFullBackupJson,
     validateImportJson,
     importDatabase,
+    showToast,
   } = useGame();
 
   const [activeTab, setActiveTab] = useState<'export' | 'import'>(defaultTab);
@@ -142,7 +143,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
       setPreview(null);
       onClose();
     } else {
-      alert(result.message);
+      showToast(result.message);
     }
   };
 
@@ -357,7 +358,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
                         <span>Invalid JSON or Format</span>
                       </div>
                       {preview.errors.map((err, i) => (
-                        <div key={i} className="pl-5 text-[11px] text-rose-400">
+                        <div key={`${i}-${err}`} className="pl-5 text-[11px] text-rose-400">
                           • {err}
                         </div>
                       ))}
