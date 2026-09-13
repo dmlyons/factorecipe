@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { CalculationBreakdown, ProductionNode } from '../../types';
 import { formatRate, formatPower } from '../../utils/calculator';
 import { ZoomIn, ZoomOut, Maximize2, Zap, Cog, ArrowRight } from 'lucide-react';
@@ -117,13 +117,24 @@ export const FlowGraph: React.FC<FlowGraphProps> = ({ calculation, onSelectRecip
     setIsDragging(false);
   };
 
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const zoomFactor = 1.1;
-    let newZoom = e.deltaY < 0 ? zoom * zoomFactor : zoom / zoomFactor;
-    newZoom = Math.min(Math.max(newZoom, 0.3), 2.5);
-    setZoom(newZoom);
-  };
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      if (e.ctrlKey || e.metaKey) {
+        const zoomFactor = 1.1;
+        setZoom((z) => {
+          const newZoom = e.deltaY < 0 ? z * zoomFactor : z / zoomFactor;
+          return Math.min(Math.max(newZoom, 0.3), 2.5);
+        });
+        return;
+      }
+      setPan((p) => ({ x: p.x - e.deltaX, y: p.y - e.deltaY }));
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
 
   const resetView = () => {
     setZoom(0.85);
@@ -215,7 +226,6 @@ export const FlowGraph: React.FC<FlowGraphProps> = ({ calculation, onSelectRecip
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        onWheel={handleWheel}
       >
         <div
           style={{
