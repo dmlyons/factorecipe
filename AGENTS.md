@@ -26,6 +26,7 @@ Welcome to the **FactoRecipe** codebase. This document serves as the authoritati
 - **Celebration / Gamification**: `canvas-confetti`
 - **Linting & Type-Checking**: Strict TypeScript (`strict: true`, `noUnusedLocals: true`, `noUnusedParameters: true`)
 - **Testing**: Vitest (`vitest.config.ts`, node environment) — unit tests for pure logic live alongside their source as `*.test.ts` (e.g. `src/utils/calculator.test.ts`); no component/DOM test setup exists yet
+- **License**: Apache License 2.0 (`LICENSE`)
 
 ---
 

@@ -2,10 +2,10 @@
 
 An interactive, sandbox-focused recipe tracker, production tree solver, and factory chain calculator for factory simulation games (Factorio, Satisfactory, Dyson Sphere Program, Tech Mods, and custom sandbox designs).
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![React](https://img.shields.io/badge/React-18-cyan.svg)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue.svg)
-![Tailwind](https://img.shields.io/badge/Tailwind-3-teal.svg)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
+[![React](https://img.shields.io/badge/React-18-cyan.svg)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue.svg)](https://www.typescriptlang.org/)
+[![Tailwind](https://img.shields.io/badge/Tailwind-3-teal.svg)](https://tailwindcss.com/)
 
 ---
 
@@ -126,15 +126,26 @@ factorecipe/
 │   │   └── index.ts                   # Core TypeScript types
 │   ├── utils/
 │   │   ├── calculator.ts              # Production graph solver & metrics helpers
-│   │   └── calculator.test.ts         # Vitest unit tests for the solver
+│   │   ├── calculator.test.ts         # Vitest unit tests for the solver
+│   │   └── sort.ts                    # Shared Intl.Collator-based alphabetical sort helpers
 │   ├── App.tsx                        # Main application container
 │   ├── index.css                      # Tailwind & custom keyframe styling
 │   └── main.tsx                       # React DOM root entry
 ├── examples/
-│   └── satisfactory-1.2.json          # Example importable sandbox dataset
+│   ├── satisfactory-1.2.json          # Example importable sandbox dataset
+│   └── star-rupture.json              # Example importable sandbox dataset
+├── .github/workflows/
+│   ├── ci.yml                         # Type-check, build, test on push/PR to main
+│   └── deploy.yml                     # Build & deploy dist/ to GitHub Pages
 ├── index.html
 ├── package.json
 ├── tailwind.config.js
 ├── vite.config.ts
 └── vitest.config.ts
 ```
+
+---
+
+## 📄 License
+
+Licensed under the [Apache License 2.0](./LICENSE).
