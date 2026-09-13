@@ -216,7 +216,7 @@ export const CalculatorView: React.FC = () => {
               </div>
               <input
                 type="number"
-                min="0.1"
+                min="0"
                 step="any"
                 value={activeGoal.targetRate}
                 onChange={(e) => {

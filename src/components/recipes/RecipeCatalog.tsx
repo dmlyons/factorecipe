@@ -442,7 +442,7 @@ export const RecipeCatalog: React.FC = () => {
                   </label>
                   <input
                     type="number"
-                    min="0.1"
+                    min="0"
                     step="any"
                     required
                     value={formCraftTime}
