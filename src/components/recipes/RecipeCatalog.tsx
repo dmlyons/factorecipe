@@ -143,7 +143,7 @@ export const RecipeCatalog: React.FC = () => {
         </div>
 
         {/* Filters & Add Recipe Button */}
-        <div className="flex items-center gap-2.5 overflow-x-auto">
+        <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar">
           {/* Unlock Filter */}
           <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-1 text-xs">
             <button
@@ -191,7 +191,7 @@ export const RecipeCatalog: React.FC = () => {
       </div>
 
       {/* Categories chips */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
         <button
           onClick={() => setSelectedCategory('all')}
           className={`px-3 py-1 rounded-lg text-xs font-medium border transition ${

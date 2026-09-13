@@ -147,7 +147,7 @@ export const ItemsView: React.FC = () => {
       </div>
 
       {/* Category Filter Chips */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
         <button
           onClick={() => setCategoryFilter('all')}
           className={`px-3 py-1 rounded-lg text-xs font-medium border transition ${

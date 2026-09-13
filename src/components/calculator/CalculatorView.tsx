@@ -89,7 +89,7 @@ export const CalculatorView: React.FC = () => {
     <div className="space-y-6">
       {/* Pinned Production Goals Tab Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-1 border-b border-slate-800">
-        <div className="flex items-center gap-2 overflow-x-auto py-1 max-w-full">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 max-w-full">
           <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider pl-1">
             Goals:
           </span>
