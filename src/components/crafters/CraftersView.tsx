@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { useGame } from '../../context/GameContext';
 import { Crafter } from '../../types';
 import { formatPower } from '../../utils/calculator';
@@ -15,6 +16,7 @@ export const CraftersView: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCrafter, setEditingCrafter] = useState<Crafter | null>(null);
 
+  useEscapeKey(isModalOpen, () => setIsModalOpen(false));
   const [formName, setFormName] = useState('');
   const [formIcon, setFormIcon] = useState('⚙️');
   const [formSpeed, setFormSpeed] = useState(1.0);

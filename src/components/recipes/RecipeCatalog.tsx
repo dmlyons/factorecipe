@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { useGame } from '../../context/GameContext';
 import { Recipe, RecipeIngredient, RecipeProduct } from '../../types';
 import {
@@ -33,6 +34,8 @@ export const RecipeCatalog: React.FC = () => {
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
+
+  useEscapeKey(isModalOpen, () => setIsModalOpen(false));
 
   // Form states
   const [formName, setFormName] = useState('');

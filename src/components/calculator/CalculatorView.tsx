@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useGame } from '../../context/GameContext';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { FlowGraph } from './FlowGraph';
 import { formatRate, formatPower, getBeltRequirements } from '../../utils/calculator';
 import {
@@ -37,6 +38,9 @@ export const CalculatorView: React.FC = () => {
   const [showItemPicker, setShowItemPicker] = useState(false);
   const [itemPickerSearch, setItemPickerSearch] = useState('');
   const [editingNodeRecipeId, setEditingNodeRecipeId] = useState<string | null>(null);
+
+  useEscapeKey(showItemPicker, () => setShowItemPicker(false));
+  useEscapeKey(editingNodeRecipeId !== null, () => setEditingNodeRecipeId(null));
 
   if (!activeGoal || !activeCalculation) {
     return (

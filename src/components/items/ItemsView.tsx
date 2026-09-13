@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { useGame } from '../../context/GameContext';
 import { Item } from '../../types';
 import { Search, Plus, Edit2, Trash2, Calculator, Tag } from 'lucide-react';
@@ -20,6 +21,8 @@ export const ItemsView: React.FC = () => {
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
+
+  useEscapeKey(isModalOpen, () => setIsModalOpen(false));
   const [formName, setFormName] = useState('');
   const [formIcon, setFormIcon] = useState('📦');
   const [formCategory, setFormCategory] = useState('Raw Resources');

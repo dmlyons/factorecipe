@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { useGame } from '../../context/GameContext';
 import {
   Database,
@@ -25,6 +26,8 @@ export const DatabaseSettings: React.FC = () => {
   } = useGame();
 
   const [isCreatingNew, setIsCreatingNew] = useState(false);
+
+  useEscapeKey(isCreatingNew, () => setIsCreatingNew(false));
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newIcon, setNewIcon] = useState('🏭');

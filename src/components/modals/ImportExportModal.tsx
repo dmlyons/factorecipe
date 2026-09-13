@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useGame } from '../../context/GameContext';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { ImportPreview } from '../../types';
 import {
   Download,
@@ -55,6 +56,8 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
   useEffect(() => {
     setActiveTab(defaultTab);
   }, [defaultTab, isOpen]);
+
+  useEscapeKey(isOpen, onClose);
 
   // Generate current export string
   const currentExportJson =
