@@ -65,7 +65,9 @@ export const Navbar: React.FC = () => {
     { id: 'progression', label: 'Progression', icon: Trophy },
   ];
 
-  const handleTabClick = (tabId: 'calculator' | 'recipes' | 'items' | 'crafters' | 'progression' | 'settings') => {
+  const handleTabClick = (
+    tabId: 'calculator' | 'recipes' | 'items' | 'crafters' | 'progression' | 'settings',
+  ) => {
     setActiveTab(tabId);
     setMobileMenuOpen(false);
   };
@@ -205,7 +207,11 @@ export const Navbar: React.FC = () => {
               className="p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition focus:outline-none border border-slate-800"
               aria-label="Toggle navigation menu"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5 text-amber-400" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5 text-amber-400" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
             </button>
           </div>
         </div>
@@ -298,4 +304,3 @@ export const Navbar: React.FC = () => {
     </header>
   );
 };
-

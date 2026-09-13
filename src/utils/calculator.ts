@@ -15,7 +15,7 @@ export function calculateProductionChain(
   unit: RateUnit,
   database: GameDatabase,
   preferredRecipes: Record<string, string> = {},
-  preferredCrafters: Record<string, string> = {}
+  preferredCrafters: Record<string, string> = {},
 ): CalculationBreakdown {
   const warnings: string[] = [];
 
@@ -46,9 +46,7 @@ export function calculateProductionChain(
       const rec = database.recipes.find((r) => r.id === preferredRecipes[itemId]);
       if (rec) return rec;
     }
-    return database.recipes.find((r) =>
-      r.products.some((p) => p.itemId === itemId)
-    );
+    return database.recipes.find((r) => r.products.some((p) => p.itemId === itemId));
   }
 
   // Find crafter for a recipe
@@ -103,18 +101,22 @@ export function calculateProductionChain(
     rateNeededPerMin: number,
     consumerRecipeId?: string,
     currentDepth = 0,
-    ancestorItemIds = new Set<string>()
+    ancestorItemIds = new Set<string>(),
   ) {
     if (rateNeededPerMin <= 0) return;
 
     const item = database.items.find((i) => i.id === itemId);
     if (!item) {
-      warnings.push(`Item ID "${itemId}" is referenced in recipes but missing from item definitions.`);
+      warnings.push(
+        `Item ID "${itemId}" is referenced in recipes but missing from item definitions.`,
+      );
       return;
     }
 
     if (ancestorItemIds.has(itemId)) {
-      warnings.push(`Circular recipe dependency detected involving "${item.name}". Stopped recursion to prevent infinite loop.`);
+      warnings.push(
+        `Circular recipe dependency detected involving "${item.name}". Stopped recursion to prevent infinite loop.`,
+      );
       return;
     }
 
@@ -181,7 +183,7 @@ export function calculateProductionChain(
         ingredientRateNeeded,
         recipe.id,
         currentDepth + 1,
-        nextAncestors
+        nextAncestors,
       );
     }
   }
@@ -247,7 +249,8 @@ export function calculateProductionChain(
 
     const invertedDepth = maxDepth - (recipeDepthMap.get(recipe.id) || 0);
 
-    const primaryProduct = recipe.products.find((p) => p.itemId === targetItemId) || recipe.products[0];
+    const primaryProduct =
+      recipe.products.find((p) => p.itemId === targetItemId) || recipe.products[0];
 
     nodes.push({
       id: recipe.id,

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { calculateProductionChain, formatPower, formatRate, getBeltRequirements } from './calculator';
+import {
+  calculateProductionChain,
+  formatPower,
+  formatRate,
+  getBeltRequirements,
+} from './calculator';
 import { Crafter, GameDatabase, Item, Recipe } from '../types';
 
 function item(id: string, overrides: Partial<Item> = {}): Item {
@@ -83,9 +88,7 @@ describe('calculateProductionChain', () => {
     expect(node.machinesCeil).toBe(2);
     expect(node.powerKW).toBeCloseTo(1.5 * 150);
     expect(result.totalPowerKW).toBeCloseTo(225);
-    expect(result.rawInputs).toEqual([
-      expect.objectContaining({ itemId: 'ore', ratePerMin: 45 }),
-    ]);
+    expect(result.rawInputs).toEqual([expect.objectContaining({ itemId: 'ore', ratePerMin: 45 })]);
   });
 
   it('does not round a machine count just under an integer up to the next one', () => {
@@ -128,17 +131,25 @@ describe('calculateProductionChain', () => {
     const result = calculateProductionChain('gear', 30, 'per_minute', database);
 
     expect(result.nodes).toHaveLength(2);
-    expect(result.rawInputs).toEqual([
-      expect.objectContaining({ itemId: 'ore', ratePerMin: 60 }),
-    ]);
+    expect(result.rawInputs).toEqual([expect.objectContaining({ itemId: 'ore', ratePerMin: 60 })]);
     expect(result.intermediates).toEqual([
-      expect.objectContaining({ itemId: 'plate', producedPerMin: 60, consumedPerMin: 60, surplusPerMin: 0 }),
+      expect.objectContaining({
+        itemId: 'plate',
+        producedPerMin: 60,
+        consumedPerMin: 60,
+        surplusPerMin: 0,
+      }),
     ]);
     // gear is the target item; it must not appear in the intermediates list.
     expect(result.intermediates.some((i) => i.itemId === 'gear')).toBe(false);
     // Edge from the plate recipe into the gear recipe.
     expect(result.edges).toEqual([
-      expect.objectContaining({ sourceNodeId: 'smelt-plate', targetNodeId: 'craft-gear', itemId: 'plate', ratePerMin: 60 }),
+      expect.objectContaining({
+        sourceNodeId: 'smelt-plate',
+        targetNodeId: 'craft-gear',
+        itemId: 'plate',
+        ratePerMin: 60,
+      }),
     ]);
   });
 
@@ -152,7 +163,10 @@ describe('calculateProductionChain', () => {
         // Every cycle yields 1 gear (needed) AND 1 scrap (byproduct, unconsumed).
         recipe('craft-gear', {
           ingredients: [{ itemId: 'ore', amount: 1 }],
-          products: [{ itemId: 'gear', amount: 1 }, { itemId: 'scrap', amount: 1 }],
+          products: [
+            { itemId: 'gear', amount: 1 },
+            { itemId: 'scrap', amount: 1 },
+          ],
           defaultCrafterId: 'machine',
         }),
       ],
@@ -160,7 +174,7 @@ describe('calculateProductionChain', () => {
     const result = calculateProductionChain('gear', 30, 'per_minute', database);
     const scrap = result.intermediates.find((i) => i.itemId === 'scrap');
     expect(scrap).toEqual(
-      expect.objectContaining({ producedPerMin: 30, consumedPerMin: 0, surplusPerMin: 30 })
+      expect.objectContaining({ producedPerMin: 30, consumedPerMin: 0, surplusPerMin: 30 }),
     );
   });
 
@@ -201,7 +215,9 @@ describe('calculateProductionChain', () => {
     });
     const result = calculateProductionChain('gear', 60, 'per_minute', database);
     expect(result.warnings).toEqual([
-      expect.stringContaining('"ghost-ore" is referenced in recipes but missing from item definitions'),
+      expect.stringContaining(
+        '"ghost-ore" is referenced in recipes but missing from item definitions',
+      ),
     ]);
   });
 
@@ -222,7 +238,9 @@ describe('calculateProductionChain', () => {
         }),
       ],
     });
-    const result = calculateProductionChain('gear', 10, 'per_minute', database, { gear: 'costly-gear' });
+    const result = calculateProductionChain('gear', 10, 'per_minute', database, {
+      gear: 'costly-gear',
+    });
     expect(result.nodes).toHaveLength(1);
     expect(result.nodes[0].recipeId).toBe('costly-gear');
     expect(result.rawInputs[0].ratePerMin).toBe(50);
@@ -244,7 +262,14 @@ describe('calculateProductionChain', () => {
         }),
       ],
     });
-    const result = calculateProductionChain('plate', 60, 'per_minute', database, {}, { 'smelt-plate': 'fast-furnace' });
+    const result = calculateProductionChain(
+      'plate',
+      60,
+      'per_minute',
+      database,
+      {},
+      { 'smelt-plate': 'fast-furnace' },
+    );
     expect(result.nodes[0].crafterId).toBe('fast-furnace');
     // speed 2, craftTime 1 -> 120 cycles/min/machine; 60 cycles needed -> 0.5 machines exact.
     expect(result.nodes[0].machinesExact).toBeCloseTo(0.5);
@@ -278,7 +303,10 @@ describe('calculateProductionChain', () => {
   it('falls back to a crafter matching the recipe category when no preferred/default crafter is set', () => {
     const database = db({
       items: [item('ore', { isRaw: true }), item('plate')],
-      crafters: [crafter('foundry', { category: 'Smelting' }), crafter('assembler', { category: 'Crafting' })],
+      crafters: [
+        crafter('foundry', { category: 'Smelting' }),
+        crafter('assembler', { category: 'Crafting' }),
+      ],
       recipes: [
         recipe('smelt-plate', {
           category: 'Smelting',
@@ -331,7 +359,12 @@ describe('calculateProductionChain', () => {
     // and both recipes share crafter "machine" so their totals must combine into one entry.
     const result = calculateProductionChain('widget', 60, 'per_minute', database);
     expect(result.machineRequirements).toEqual([
-      expect.objectContaining({ crafterId: 'machine', totalExact: 3, totalCeil: 3, totalPowerKW: 300 }),
+      expect.objectContaining({
+        crafterId: 'machine',
+        totalExact: 3,
+        totalCeil: 3,
+        totalPowerKW: 300,
+      }),
     ]);
   });
 });

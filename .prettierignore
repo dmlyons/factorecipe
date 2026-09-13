@@ -1,0 +1,7 @@
+dist
+coverage
+package-lock.json
+# Hand-formatted prose (tables, badges, LaTeX) — not code Prettier should reflow.
+*.md
+# Curated example datasets; formatting is part of their hand-maintained content.
+examples/

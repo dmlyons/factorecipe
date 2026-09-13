@@ -51,7 +51,8 @@ export const CalculatorView: React.FC = () => {
         </div>
         <h3 className="text-xl font-bold text-slate-100 mb-2">No Active Production Goal</h3>
         <p className="text-sm text-slate-400 mb-6">
-          Pick an item and target rate to calculate the complete factory production line, building count, and raw materials.
+          Pick an item and target rate to calculate the complete factory production line, building
+          count, and raw materials.
         </p>
         <button
           onClick={() => {
@@ -73,13 +74,10 @@ export const CalculatorView: React.FC = () => {
 
   const totalCeilMachines = activeCalculation.machineRequirements.reduce(
     (acc, m) => acc + m.totalCeil,
-    0
+    0,
   );
 
-  const totalRawItemsPerMin = activeCalculation.rawInputs.reduce(
-    (acc, r) => acc + r.ratePerMin,
-    0
-  );
+  const totalRawItemsPerMin = activeCalculation.rawInputs.reduce((acc, r) => acc + r.ratePerMin, 0);
 
   // Quick rate adjustment presets
   const applyQuickRate = (rate: number, unit: 'per_minute' | 'per_second') => {
@@ -112,9 +110,7 @@ export const CalculatorView: React.FC = () => {
                 onClick={() => setActiveGoalId(g.id)}
               >
                 <span>{item?.icon || '📦'}</span>
-                <span className="font-medium truncate max-w-[120px]">
-                  {item?.name || 'Item'}
-                </span>
+                <span className="font-medium truncate max-w-[120px]">{item?.name || 'Item'}</span>
                 <span className="font-mono text-[11px] opacity-80">
                   {g.targetRate}/{g.unit === 'per_second' ? 's' : 'm'}
                 </span>
@@ -212,9 +208,7 @@ export const CalculatorView: React.FC = () => {
           {/* Rate Controls */}
           <div className="flex items-center gap-2 bg-slate-950/60 p-1.5 rounded-xl border border-slate-800">
             <div className="px-2">
-              <div className="text-[9px] uppercase font-semibold text-slate-400">
-                Target Rate
-              </div>
+              <div className="text-[9px] uppercase font-semibold text-slate-400">Target Rate</div>
               <input
                 type="number"
                 min="0"
@@ -290,9 +284,7 @@ export const CalculatorView: React.FC = () => {
           <div className="text-2xl font-bold font-mono text-yellow-300">
             {formatPower(activeCalculation.totalPowerKW)}
           </div>
-          <div className="text-[11px] text-slate-500 font-mono mt-0.5">
-            Active electricity load
-          </div>
+          <div className="text-[11px] text-slate-500 font-mono mt-0.5">Active electricity load</div>
         </div>
 
         <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80">
@@ -300,9 +292,7 @@ export const CalculatorView: React.FC = () => {
             <span className="text-xs uppercase tracking-wider font-semibold">Machines Needed</span>
             <Cog className="w-4 h-4 text-amber-400" />
           </div>
-          <div className="text-2xl font-bold font-mono text-amber-300">
-            {totalCeilMachines}
-          </div>
+          <div className="text-2xl font-bold font-mono text-amber-300">{totalCeilMachines}</div>
           <div className="text-[11px] text-slate-500 font-mono mt-0.5">
             Across {activeCalculation.nodes.length} recipe stages
           </div>
@@ -383,15 +373,9 @@ export const CalculatorView: React.FC = () => {
                         <span className="text-xl">{m.crafterIcon}</span>
                         <span className="font-semibold">{m.crafterName}</span>
                       </td>
-                      <td className="py-2.5 px-3 text-amber-300">
-                        {formatRate(m.totalExact, 2)}
-                      </td>
-                      <td className="py-2.5 px-3 text-white font-bold">
-                        {m.totalCeil} units
-                      </td>
-                      <td className="py-2.5 px-3 text-yellow-400">
-                        {formatPower(m.totalPowerKW)}
-                      </td>
+                      <td className="py-2.5 px-3 text-amber-300">{formatRate(m.totalExact, 2)}</td>
+                      <td className="py-2.5 px-3 text-white font-bold">{m.totalCeil} units</td>
+                      <td className="py-2.5 px-3 text-yellow-400">{formatPower(m.totalPowerKW)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -431,7 +415,8 @@ export const CalculatorView: React.FC = () => {
                           {formatRate(raw.ratePerSec)} /s
                         </td>
                         <td className="py-2.5 px-3 text-amber-300">
-                          {formatRate(belts.yellowBelts, 2)} belts ({formatRate(belts.yellowBelts * 100, 0)}% of belt)
+                          {formatRate(belts.yellowBelts, 2)} belts (
+                          {formatRate(belts.yellowBelts * 100, 0)}% of belt)
                         </td>
                       </tr>
                     );
@@ -471,7 +456,9 @@ export const CalculatorView: React.FC = () => {
                         -{formatRate(item.consumedPerMin)}
                       </td>
                       <td className="py-2.5 px-3 text-slate-400">
-                        {item.surplusPerMin > 0.01 ? `+${formatRate(item.surplusPerMin)}` : '0 (Balanced)'}
+                        {item.surplusPerMin > 0.01
+                          ? `+${formatRate(item.surplusPerMin)}`
+                          : '0 (Balanced)'}
                       </td>
                     </tr>
                   ))}
@@ -495,7 +482,8 @@ export const CalculatorView: React.FC = () => {
               </p>
             </div>
             <div className="text-xs font-mono text-amber-400 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-lg">
-              Goal: {targetItem?.name} ({activeGoal.targetRate}/{activeGoal.unit === 'per_second' ? 's' : 'm'})
+              Goal: {targetItem?.name} ({activeGoal.targetRate}/
+              {activeGoal.unit === 'per_second' ? 's' : 'm'})
             </div>
           </div>
 
@@ -543,7 +531,10 @@ export const CalculatorView: React.FC = () => {
 
                   <div className="text-right text-xs font-mono hidden sm:block">
                     <div className="text-slate-400">
-                      Inputs: {node.inputs.map((i) => `${formatRate(i.ratePerMin)} ${i.itemName}`).join(', ')}
+                      Inputs:{' '}
+                      {node.inputs
+                        .map((i) => `${formatRate(i.ratePerMin)} ${i.itemName}`)
+                        .join(', ')}
                     </div>
                   </div>
                 </div>
@@ -591,33 +582,30 @@ export const CalculatorView: React.FC = () => {
                 activeDatabase.items.filter(
                   (item) =>
                     item.name.toLowerCase().includes(itemPickerSearch.toLowerCase()) ||
-                    item.category.toLowerCase().includes(itemPickerSearch.toLowerCase())
-                )
-              )
-                .map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      updateGoal({ ...activeGoal, itemId: item.id });
-                      setShowItemPicker(false);
-                    }}
-                    className={`p-3 rounded-xl border text-left flex items-center gap-3 transition ${
-                      item.id === activeGoal.itemId
-                        ? 'bg-amber-500/20 border-amber-500 text-amber-200'
-                        : 'bg-slate-800/40 border-slate-700/60 hover:bg-slate-800 hover:border-slate-500'
-                    }`}
-                  >
-                    <span className="text-2xl">{item.icon}</span>
-                    <div className="overflow-hidden">
-                      <div className="text-sm font-semibold truncate text-slate-100">
-                        {item.name}
-                      </div>
-                      <div className="text-[10px] text-slate-400 truncate">
-                        {item.category} {item.isRaw ? '(Raw)' : ''}
-                      </div>
+                    item.category.toLowerCase().includes(itemPickerSearch.toLowerCase()),
+                ),
+              ).map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    updateGoal({ ...activeGoal, itemId: item.id });
+                    setShowItemPicker(false);
+                  }}
+                  className={`p-3 rounded-xl border text-left flex items-center gap-3 transition ${
+                    item.id === activeGoal.itemId
+                      ? 'bg-amber-500/20 border-amber-500 text-amber-200'
+                      : 'bg-slate-800/40 border-slate-700/60 hover:bg-slate-800 hover:border-slate-500'
+                  }`}
+                >
+                  <span className="text-2xl">{item.icon}</span>
+                  <div className="overflow-hidden">
+                    <div className="text-sm font-semibold truncate text-slate-100">{item.name}</div>
+                    <div className="text-[10px] text-slate-400 truncate">
+                      {item.category} {item.isRaw ? '(Raw)' : ''}
                     </div>
-                  </button>
-                ))}
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -641,7 +629,8 @@ export const CalculatorView: React.FC = () => {
             </div>
 
             <p className="text-xs text-slate-400 mb-4">
-              Choose which machine type should fabricate this recipe. Higher speed crafters reduce the number of buildings needed.
+              Choose which machine type should fabricate this recipe. Higher speed crafters reduce
+              the number of buildings needed.
             </p>
 
             <div className="space-y-2">
@@ -667,7 +656,9 @@ export const CalculatorView: React.FC = () => {
                       <div>
                         <div className="text-sm font-semibold text-slate-100">{c.name}</div>
                         <div className="text-xs text-slate-400 flex items-center gap-2">
-                          <span className="text-amber-300 font-mono font-bold">{c.speed}x speed</span>
+                          <span className="text-amber-300 font-mono font-bold">
+                            {c.speed}x speed
+                          </span>
                           <span>•</span>
                           <span className="text-yellow-400 font-mono">{c.powerKW} kW</span>
                         </div>
