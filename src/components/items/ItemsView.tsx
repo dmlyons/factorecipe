@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { useGame } from '../../context/GameContext';
+import { useConfirmDialog } from '../../context/ConfirmDialogContext';
 import { sortByName, sortStrings } from '../../utils/sort';
 import { Item } from '../../types';
 import { Search, Plus, Edit2, Trash2, Calculator, Tag } from 'lucide-react';
 
 export const ItemsView: React.FC = () => {
   const { activeDatabase, addItem, updateItem, deleteItem, addGoal, setActiveTab } = useGame();
+  const confirm = useConfirmDialog();
 
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'raw' | 'crafted'>('all');
@@ -252,13 +254,14 @@ export const ItemsView: React.FC = () => {
                   </button>
                   <button
                     onClick={() => {
-                      if (
-                        confirm(
+                      void (async () => {
+                        const confirmed = await confirm(
                           `Delete "${item.name}"? This will also remove it from any recipes referencing it.`,
-                        )
-                      ) {
-                        deleteItem(item.id);
-                      }
+                        );
+                        if (confirmed) {
+                          deleteItem(item.id);
+                        }
+                      })();
                     }}
                     className="p-1.5 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition"
                     title="Delete Item"

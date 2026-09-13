@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { useGame } from '../../context/GameContext';
+import { useConfirmDialog } from '../../context/ConfirmDialogContext';
 import {
   Database,
   Download,
@@ -24,6 +25,7 @@ export const DatabaseSettings: React.FC = () => {
     resetToDefaultPreset,
     openImportExportModal,
   } = useGame();
+  const confirm = useConfirmDialog();
 
   const [isCreatingNew, setIsCreatingNew] = useState(false);
 
@@ -180,9 +182,14 @@ export const DatabaseSettings: React.FC = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (confirm(`Delete database "${db.name}"? This cannot be undone.`)) {
-                          deleteDatabase(db.id);
-                        }
+                        void (async () => {
+                          const confirmed = await confirm(
+                            `Delete database "${db.name}"? This cannot be undone.`,
+                          );
+                          if (confirmed) {
+                            deleteDatabase(db.id);
+                          }
+                        })();
                       }}
                       className="p-2 rounded-lg hover:bg-rose-500/20 text-slate-500 hover:text-rose-400 transition"
                       title="Delete database"
@@ -203,11 +210,14 @@ export const DatabaseSettings: React.FC = () => {
           </span>
           <button
             onClick={() => {
-              if (
-                confirm('Reset to standard presets? Your custom modifications will be replaced.')
-              ) {
-                resetToDefaultPreset();
-              }
+              void (async () => {
+                const confirmed = await confirm(
+                  'Reset to standard presets? Your custom modifications will be replaced.',
+                );
+                if (confirmed) {
+                  resetToDefaultPreset();
+                }
+              })();
             }}
             className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 font-semibold"
           >

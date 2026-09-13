@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { useGame } from '../../context/GameContext';
+import { useConfirmDialog } from '../../context/ConfirmDialogContext';
 import { sortByName } from '../../utils/sort';
 import { Crafter } from '../../types';
 import { formatPower } from '../../utils/calculator';
@@ -8,6 +9,7 @@ import { Cog, Plus, Edit2, Trash2, Zap, Gauge, Layers } from 'lucide-react';
 
 export const CraftersView: React.FC = () => {
   const { activeDatabase, addCrafter, updateCrafter, deleteCrafter } = useGame();
+  const confirm = useConfirmDialog();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCrafter, setEditingCrafter] = useState<Crafter | null>(null);
@@ -161,13 +163,14 @@ export const CraftersView: React.FC = () => {
                 </button>
                 <button
                   onClick={() => {
-                    if (
-                      confirm(
+                    void (async () => {
+                      const confirmed = await confirm(
                         `Delete machine "${crafter.name}"? Recipes using it will fall back to other available crafters.`,
-                      )
-                    ) {
-                      deleteCrafter(crafter.id);
-                    }
+                      );
+                      if (confirmed) {
+                        deleteCrafter(crafter.id);
+                      }
+                    })();
                   }}
                   className="p-1.5 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition"
                   title="Delete Machine"
