@@ -42,7 +42,8 @@ factorecipe/
 │   │   └── useEscapeKey.ts          # Shared hook: closes a modal/dropdown on Escape while it is open
 │   ├── utils/
 │   │   ├── calculator.ts            # DAG recursion engine, rate conversions, power summation, belt rates
-│   │   └── calculator.test.ts       # Vitest unit tests for the calculation engine
+│   │   ├── calculator.test.ts       # Vitest unit tests for the calculation engine
+│   │   └── sort.ts                  # sortByName/sortStrings: shared Intl.Collator-based alphabetical ordering for catalogs & dropdowns
 │   ├── context/
 │   │   └── GameContext.tsx          # Global state, persistence hooks, and action dispatches
 │   ├── components/
@@ -67,7 +68,12 @@ factorecipe/
 │   ├── index.css                    # Tailwind root directives, keyframe animations, dark scrollbar styling
 │   └── main.tsx                     # ReactDOM mounting entry
 ├── examples/
-│   └── satisfactory-1.2.json        # Example importable GameDatabase sandbox (see §9)
+│   ├── satisfactory-1.2.json        # Example importable GameDatabase sandbox (see §9)
+│   └── star-rupture.json            # Example importable GameDatabase sandbox (see §9)
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                   # Type-check, build, and test on push/PR to main
+│       └── deploy.yml               # Build and deploy `dist` to GitHub Pages on push to main
 ├── index.html                       # HTML wrapper with Chakra Petch & JetBrains Mono font links
 ├── package.json                     # NPM dependencies and script targets
 ├── tailwind.config.js               # Industrial color palette extensions
@@ -169,9 +175,10 @@ npm test
 npm run preview
 ```
 
-### Continuous Integration (`.github/workflows/ci.yml`)
+### Continuous Integration & Deployment (`.github/workflows/`)
 
-GitHub Actions runs `npm run build` (type-check + production build) and `npm test` on every push to `main` and every pull request targeting `main`. A PR with a failing build or test suite should not be merged.
+- `ci.yml`: runs `npm run build` (type-check + production build) and `npm test` on every push to `main` and every pull request targeting `main`. A PR with a failing build or test suite should not be merged.
+- `deploy.yml`: on every push to `main` (and manual `workflow_dispatch`), runs `npm test` + `npm run build` then publishes `dist` to GitHub Pages via `actions/deploy-pages`. The production build uses `base: '/factorecipe/'` (set in `vite.config.ts`) to serve correctly from the `https://<user>.github.io/factorecipe/` project-pages path.
 
 ### Critical Rules for AI Agents Editing Code
 1. **Maintain TypeScript Strictness**:
@@ -185,6 +192,7 @@ GitHub Actions runs `npm run build` (type-check + production build) and `npm tes
    - Retain the industrial dark palette (`bg-[#090d16]`, `bg-slate-900`, `border-slate-800`).
    - Use `formatRate` and `formatPower` for clean numerical formatting (avoid long floating-point decimals like `1.33333333333`).
    - For icons, use standard Lucide icons and emojis consistently.
+   - Any list of items/crafters/recipes/categories/sandboxes rendered as a catalog grid, filter-chip row, or `<select>`/picker MUST be sorted with `sortByName`/`sortStrings` (`src/utils/sort.ts`) rather than left in raw insertion order — long unsorted lists are hard to scan. Exception: user-ordered lists (e.g. pinned goal tabs) and fixed-structure nav stay in their existing order.
 
 4. **Testing Discipline**:
    - Pure logic (calculation, formatting, validation) gets colocated `*.test.ts` unit tests; UI components currently have no test harness — verify those manually (`npm run dev`) instead of adding ad hoc component tests.
@@ -210,4 +218,5 @@ When expanding FactoRecipe, consider these planned enhancements:
 `examples/` holds standalone JSON files matching the `GameDatabase` schema (§4), meant to be imported through the running app (Settings → Import Sandbox → drag-and-drop or paste), not wired into `src/data/presets.ts`. They are not built-in presets and require no code change to use.
 
 - `satisfactory-1.2.json`: a partial Satisfactory 1.2 production chain (ore/oil extraction through Smelter, Foundry, Constructor, Assembler, Manufacturer, Refinery), including a Manufacturer recipe with 4 ingredients (Heavy Modular Frame) and a Plastic/Rubber → Heavy Oil Residue → Fuel byproduct chain. Most ratios follow long-stable base-game values; any rounded-for-demonstration ratio is flagged in that recipe's `notes` field and in the file's top-level `description`.
+- `star-rupture.json`: an Early Access (Jan 2026) Star Rupture production chain (Titanium/Wolfram/Calcium ore and Helium-3 extraction through Smelter, Fabricator, and Furnace processing) sourced from the Star Rupture Wiki. Deeper Assembler-tier recipes are intentionally omitted where their ingredients (Battery, Pump, Valve, Generator, etc.) have no documented producing recipe yet, to preserve referential integrity. Balance values may drift as the game is still in Early Access — verify against the wiki before relying on exact numbers.
 - When adding another game's example dataset here, validate referential integrity (every `ingredients[].itemId`/`products[].itemId`/`defaultCrafterId` resolves, every non-raw item has a producing recipe) with a throwaway script run through `calculateProductionChain` before committing — do not commit an unexercised dataset.

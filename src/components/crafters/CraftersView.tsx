@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { useGame } from '../../context/GameContext';
+import { sortByName } from '../../utils/sort';
 import { Crafter } from '../../types';
 import { formatPower } from '../../utils/calculator';
 import { Cog, Plus, Edit2, Trash2, Zap, Gauge, Layers } from 'lucide-react';
@@ -92,7 +93,7 @@ export const CraftersView: React.FC = () => {
 
       {/* Crafters Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {activeDatabase.crafters.map((crafter) => {
+        {sortByName(activeDatabase.crafters).map((crafter) => {
           const associatedRecipes = activeDatabase.recipes.filter(
             (r) => r.defaultCrafterId === crafter.id || r.category === crafter.category
           );

@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useGame } from '../../context/GameContext';
+import { sortByName } from '../../utils/sort';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import {
   Cog,
@@ -40,6 +41,8 @@ export const Navbar: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [dbMenuOpen]);
+
+  const sortedDatabases = useMemo(() => sortByName(databases), [databases]);
 
   const selectDatabase = (id: string) => {
     if (id === '__manage__') {
@@ -112,7 +115,7 @@ export const Navbar: React.FC = () => {
                     role="listbox"
                     className="absolute left-0 top-full mt-1.5 w-64 max-h-72 overflow-y-auto bg-slate-900 border border-slate-700/80 rounded-lg shadow-2xl z-50 py-1"
                   >
-                    {databases.map((db) => (
+                    {sortedDatabases.map((db) => (
                       <button
                         key={db.id}
                         type="button"
@@ -228,7 +231,7 @@ export const Navbar: React.FC = () => {
                 }}
                 className="w-full appearance-none bg-slate-900 border border-slate-700/80 text-xs font-semibold text-slate-200 py-2 pl-8 pr-8 rounded-xl focus:outline-none focus:border-amber-400"
               >
-                {databases.map((db) => (
+                {sortedDatabases.map((db) => (
                   <option key={db.id} value={db.id}>
                     {db.icon} {db.name}
                   </option>
