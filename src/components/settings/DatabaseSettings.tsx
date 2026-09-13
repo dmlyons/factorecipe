@@ -50,7 +50,8 @@ export const DatabaseSettings: React.FC = () => {
           <span>Factory Database & Sandbox Manager</span>
         </h2>
         <p className="text-xs text-slate-400 mt-1">
-          Switch between different factory games, create blank sandbox environments, import/export community databases, or reset presets.
+          Switch between different factory games, create blank sandbox environments, import/export
+          community databases, or reset presets.
         </p>
       </div>
 
@@ -168,7 +169,8 @@ export const DatabaseSettings: React.FC = () => {
                       )}
                     </div>
                     <div className="text-xs text-slate-400 mt-0.5">
-                      {db.items.length} items • {db.recipes.length} recipes • {db.crafters.length} machines
+                      {db.items.length} items • {db.recipes.length} recipes • {db.crafters.length}{' '}
+                      machines
                     </div>
                   </div>
                 </div>
@@ -201,7 +203,9 @@ export const DatabaseSettings: React.FC = () => {
           </span>
           <button
             onClick={() => {
-              if (confirm('Reset to standard presets? Your custom modifications will be replaced.')) {
+              if (
+                confirm('Reset to standard presets? Your custom modifications will be replaced.')
+              ) {
                 resetToDefaultPreset();
               }
             }}
@@ -243,7 +247,9 @@ export const DatabaseSettings: React.FC = () => {
                 />
               </div>
               <div className="col-span-3">
-                <label className="block text-slate-400 font-semibold mb-1">Game / Sandbox Name</label>
+                <label className="block text-slate-400 font-semibold mb-1">
+                  Game / Sandbox Name
+                </label>
                 <input
                   type="text"
                   required

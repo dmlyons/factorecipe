@@ -96,7 +96,7 @@ export const FlowGraph: React.FC<FlowGraphProps> = ({ calculation, onSelectRecip
     });
 
     const totalWidth = startX + sortedDepths.length * (NODE_WIDTH + NODE_GAP_X) + 100;
-    const totalHeight = Math.max(maxY + 100, (rawNodes.length * 85) + 80, 600);
+    const totalHeight = Math.max(maxY + 100, rawNodes.length * 85 + 80, 600);
 
     return { layouts: layoutsArr, width: totalWidth, height: totalHeight, rawInputNodes: rawNodes };
   }, [calculation]);
@@ -202,34 +202,36 @@ export const FlowGraph: React.FC<FlowGraphProps> = ({ calculation, onSelectRecip
 
   // Build edge SVG paths
   const edgePaths = useMemo(() => {
-    return calculation.edges.map((edge) => {
-      const sourceLayout = layouts.find((l) => l.node.id === edge.sourceNodeId);
-      const targetLayout = layouts.find((l) => l.node.id === edge.targetNodeId);
+    return calculation.edges
+      .map((edge) => {
+        const sourceLayout = layouts.find((l) => l.node.id === edge.sourceNodeId);
+        const targetLayout = layouts.find((l) => l.node.id === edge.targetNodeId);
 
-      if (!sourceLayout || !targetLayout) return null;
+        if (!sourceLayout || !targetLayout) return null;
 
-      // Source point on right edge of source node
-      const sx = sourceLayout.x + sourceLayout.width;
-      const sy = sourceLayout.y + sourceLayout.height / 2;
+        // Source point on right edge of source node
+        const sx = sourceLayout.x + sourceLayout.width;
+        const sy = sourceLayout.y + sourceLayout.height / 2;
 
-      // Target point on left edge of target node
-      const tx = targetLayout.x;
-      const ty = targetLayout.y + targetLayout.height / 2;
+        // Target point on left edge of target node
+        const tx = targetLayout.x;
+        const ty = targetLayout.y + targetLayout.height / 2;
 
-      const deltaX = Math.abs(tx - sx) * 0.5;
-      const pathData = `M ${sx} ${sy} C ${sx + deltaX} ${sy}, ${tx - deltaX} ${ty}, ${tx} ${ty}`;
+        const deltaX = Math.abs(tx - sx) * 0.5;
+        const pathData = `M ${sx} ${sy} C ${sx + deltaX} ${sy}, ${tx - deltaX} ${ty}, ${tx} ${ty}`;
 
-      const midX = (sx + tx) / 2;
-      const midY = (sy + ty) / 2;
+        const midX = (sx + tx) / 2;
+        const midY = (sy + ty) / 2;
 
-      return {
-        id: edge.id,
-        path: pathData,
-        midX,
-        midY,
-        edge,
-      };
-    }).filter(Boolean);
+        return {
+          id: edge.id,
+          path: pathData,
+          midX,
+          midY,
+          edge,
+        };
+      })
+      .filter(Boolean);
   }, [layouts, calculation.edges]);
 
   return (
@@ -355,9 +357,7 @@ export const FlowGraph: React.FC<FlowGraphProps> = ({ calculation, onSelectRecip
                 title={`${ep.edge.itemName}: ${formatRate(ep.edge.ratePerMin)} / min`}
               >
                 <span className="text-sm">{ep.edge.itemIcon}</span>
-                <span className="text-amber-300 font-medium">
-                  {formatRate(ep.edge.ratePerMin)}
-                </span>
+                <span className="text-amber-300 font-medium">{formatRate(ep.edge.ratePerMin)}</span>
                 <span className="text-[9px] text-slate-400">/m</span>
               </div>
             );
@@ -381,9 +381,7 @@ export const FlowGraph: React.FC<FlowGraphProps> = ({ calculation, onSelectRecip
                   <div className="text-xs font-semibold text-slate-200 truncate">
                     {raw.itemName}
                   </div>
-                  <div className="text-[10px] text-emerald-400 font-mono">
-                    RAW HARVEST
-                  </div>
+                  <div className="text-[10px] text-emerald-400 font-mono">RAW HARVEST</div>
                 </div>
               </div>
               <div className="text-right">
@@ -409,8 +407,8 @@ export const FlowGraph: React.FC<FlowGraphProps> = ({ calculation, onSelectRecip
                   node.isTarget
                     ? 'bg-slate-900/95 border-amber-500/80 shadow-amber-500/10 ring-2 ring-amber-500/30'
                     : isSelected
-                    ? 'bg-slate-900/95 border-cyan-400 ring-2 ring-cyan-400/30'
-                    : 'bg-slate-900/90 border-slate-700/80 hover:border-slate-500'
+                      ? 'bg-slate-900/95 border-cyan-400 ring-2 ring-cyan-400/30'
+                      : 'bg-slate-900/90 border-slate-700/80 hover:border-slate-500'
                 }`}
                 style={{
                   left: x,
@@ -454,9 +452,7 @@ export const FlowGraph: React.FC<FlowGraphProps> = ({ calculation, onSelectRecip
                     <span className="font-bold text-amber-300 text-sm">
                       {formatRate(node.machinesExact, 2)}
                     </span>
-                    <span className="text-[10px] text-slate-400">
-                      (need {node.machinesCeil})
-                    </span>
+                    <span className="text-[10px] text-slate-400">(need {node.machinesCeil})</span>
                   </div>
 
                   <div className="flex items-center gap-1 text-[11px] font-mono text-slate-400">

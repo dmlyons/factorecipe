@@ -18,13 +18,14 @@ Welcome to the **FactoRecipe** codebase. This document serves as the authoritati
 
 ## 2. Tech Stack & Environment
 
-- **Language / Runtime**: TypeScript 5.7+ running on Node.js (v18+)
+- **Language / Runtime**: TypeScript 5.7+ running on Node.js (`^20.19.0 || ^22.13.0 || >=24`, see `package.json#engines`)
 - **Build Tool / Bundler**: Vite 6.x
 - **UI Framework**: React 18.x (functional components with React hooks)
 - **Styling**: Tailwind CSS 3.x with dark-mode industrial theme (`#0b0f19` canvas, slate surfaces, amber/orange highlights, cyan outputs, emerald raw materials)
 - **Icons**: `lucide-react`
 - **Celebration / Gamification**: `canvas-confetti`
-- **Linting & Type-Checking**: Strict TypeScript (`strict: true`, `noUnusedLocals: true`, `noUnusedParameters: true`)
+- **Linting & Formatting**: ESLint 10 flat config (`eslint.config.js`) — `typescript-eslint` `recommendedTypeChecked`, `eslint-plugin-react-hooks` (`rules-of-hooks` + `exhaustive-deps` only), `eslint-plugin-react-refresh`, `@vitest/eslint-plugin` for `*.test.ts`; Prettier (`.prettierrc.json`) handles formatting, `eslint-config-prettier` disables ESLint stylistic rules that would conflict with it
+- **Type-Checking**: Strict TypeScript (`strict: true`, `noUnusedLocals: true`, `noUnusedParameters: true`) — ESLint defers to `tsc` for unused-vars, so `@typescript-eslint/no-unused-vars` is off
 - **Testing**: Vitest (`vitest.config.ts`, node environment) — unit tests for pure logic live alongside their source as `*.test.ts` (e.g. `src/utils/calculator.test.ts`); no component/DOM test setup exists yet
 - **License**: Apache License 2.0 (`LICENSE`)
 
@@ -73,8 +74,11 @@ factorecipe/
 │   └── star-rupture.json            # Example importable GameDatabase sandbox (see §9)
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml                   # Type-check, build, and test on push/PR to main
+│       ├── ci.yml                   # Lint, format-check, type-check, build, and test on push/PR to main
 │       └── deploy.yml               # Build and deploy `dist` to GitHub Pages on push to main
+├── eslint.config.js                 # ESLint flat config (typescript-eslint, react-hooks, react-refresh, vitest)
+├── .prettierrc.json                 # Prettier formatting options
+├── .prettierignore                  # Prettier exclusions (dist, examples/, *.md, …)
 ├── index.html                       # HTML wrapper with Chakra Petch & JetBrains Mono font links
 ├── package.json                     # NPM dependencies and script targets
 ├── tailwind.config.js               # Industrial color palette extensions
@@ -172,19 +176,27 @@ npm run build
 # Run the Vitest unit test suite once (non-watch)
 npm test
 
+# Lint with ESLint (typescript-eslint, react-hooks, react-refresh, vitest rules)
+npm run lint
+
+# Check/apply Prettier formatting
+npm run format:check
+npm run format
+
 # Preview production build locally
 npm run preview
 ```
 
 ### Continuous Integration & Deployment (`.github/workflows/`)
 
-- `ci.yml`: runs `npm run build` (type-check + production build) and `npm test` on every push to `main` and every pull request targeting `main`. A PR with a failing build or test suite should not be merged.
+- `ci.yml`: runs `npm run lint`, `npm run format:check`, `npm run build` (type-check + production build), and `npm test` on every push to `main` and every pull request targeting `main`. A PR with a lint, formatting, build, or test failure should not be merged.
 - `deploy.yml`: on every push to `main` (and manual `workflow_dispatch`), runs `npm test` + `npm run build` then publishes `dist` to GitHub Pages via `actions/deploy-pages`. The production build uses `base: '/factorecipe/'` (set in `vite.config.ts`) to serve correctly from the `https://<user>.github.io/factorecipe/` project-pages path.
 
 ### Critical Rules for AI Agents Editing Code
 1. **Maintain TypeScript Strictness**:
    - Do NOT leave unused imports or local variables (the project uses `"noUnusedLocals": true` and `"noUnusedParameters": true`).
    - Run `npm run build` after modifying files to verify that `tsc` compiles with 0 errors.
+   - Run `npm run lint` after modifying `.ts`/`.tsx` files to verify ESLint (`eslint.config.js`) reports 0 errors; run `npm run format` if Prettier formatting drifts.
    - Run `npm test` after modifying `src/utils/calculator.ts` (or any other file with a `*.test.ts` sibling) to verify the Vitest suite still passes.
 2. **Preserve User Customizations & Data Integrity**:
    - Always retain fallback handling when an item or machine is deleted from a custom sandbox.

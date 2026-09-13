@@ -104,7 +104,9 @@ export const RecipeCatalog: React.FC = () => {
   };
 
   // Filter recipes
-  const categories = sortStrings(Array.from(new Set(activeDatabase.recipes.map((r) => r.category))));
+  const categories = sortStrings(
+    Array.from(new Set(activeDatabase.recipes.map((r) => r.category))),
+  );
 
   const filteredRecipes = activeDatabase.recipes.filter((r) => {
     const isUnlocked = progression.unlockedRecipeIds.includes(r.id);
@@ -226,9 +228,9 @@ export const RecipeCatalog: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {sortedRecipes.map((recipe) => {
           const isUnlocked = progression.unlockedRecipeIds.includes(recipe.id);
-          const defaultCrafter = activeDatabase.crafters.find(
-            (c) => c.id === recipe.defaultCrafterId
-          ) || activeDatabase.crafters[0];
+          const defaultCrafter =
+            activeDatabase.crafters.find((c) => c.id === recipe.defaultCrafterId) ||
+            activeDatabase.crafters[0];
 
           return (
             <div
@@ -243,9 +245,7 @@ export const RecipeCatalog: React.FC = () => {
               <div className="p-3.5 border-b border-slate-800/80 flex items-start justify-between gap-2 bg-slate-950/40">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-slate-100">
-                      {recipe.name}
-                    </span>
+                    <span className="text-sm font-bold text-slate-100">{recipe.name}</span>
                   </div>
                   <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400">
                     <span className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 font-mono">
@@ -268,7 +268,11 @@ export const RecipeCatalog: React.FC = () => {
                   }`}
                   title={isUnlocked ? 'Unlocked (Click to Lock)' : 'Locked (Click to Unlock)'}
                 >
-                  {isUnlocked ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                  {isUnlocked ? (
+                    <Unlock className="w-3.5 h-3.5" />
+                  ) : (
+                    <Lock className="w-3.5 h-3.5" />
+                  )}
                 </button>
               </div>
 
@@ -453,9 +457,7 @@ export const RecipeCatalog: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 font-semibold mb-1">
-                    Default Machine
-                  </label>
+                  <label className="block text-slate-400 font-semibold mb-1">Default Machine</label>
                   <select
                     value={formDefaultCrafterId}
                     onChange={(e) => setFormDefaultCrafterId(e.target.value)}
@@ -521,9 +523,7 @@ export const RecipeCatalog: React.FC = () => {
 
                     <button
                       type="button"
-                      onClick={() =>
-                        setFormIngredients((prev) => prev.filter((_, i) => i !== idx))
-                      }
+                      onClick={() => setFormIngredients((prev) => prev.filter((_, i) => i !== idx))}
                       className="text-slate-500 hover:text-rose-400 p-1"
                     >
                       ✕
@@ -583,9 +583,7 @@ export const RecipeCatalog: React.FC = () => {
 
                     <button
                       type="button"
-                      onClick={() =>
-                        setFormProducts((prev) => prev.filter((_, i) => i !== idx))
-                      }
+                      onClick={() => setFormProducts((prev) => prev.filter((_, i) => i !== idx))}
                       className="text-slate-500 hover:text-rose-400 p-1"
                     >
                       ✕

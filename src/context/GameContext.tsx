@@ -25,7 +25,10 @@ interface GameContextType {
   updateDatabaseMeta: (name: string, description: string, icon: string) => void;
   deleteDatabase: (id: string) => void;
   resetToDefaultPreset: () => void;
-  importDatabase: (jsonContent: string, mode?: 'new' | 'overwrite') => { success: boolean; message: string };
+  importDatabase: (
+    jsonContent: string,
+    mode?: 'new' | 'overwrite',
+  ) => { success: boolean; message: string };
   exportDatabase: () => void;
   exportDatabaseJson: (databaseId?: string) => string;
   downloadDatabaseJson: (databaseId?: string) => void;
@@ -81,7 +84,9 @@ interface GameContextType {
 
   // Navigation tab
   activeTab: 'calculator' | 'recipes' | 'items' | 'crafters' | 'progression' | 'settings';
-  setActiveTab: (tab: 'calculator' | 'recipes' | 'items' | 'crafters' | 'progression' | 'settings') => void;
+  setActiveTab: (
+    tab: 'calculator' | 'recipes' | 'items' | 'crafters' | 'progression' | 'settings',
+  ) => void;
 
   // Search/Filter helper
   searchQuery: string;
@@ -95,6 +100,9 @@ const STORAGE_KEY_GOALS = 'factorecipe_goals_v1';
 const STORAGE_KEY_PREF_RECIPES = 'factorecipe_pref_recipes_v1';
 const STORAGE_KEY_PREF_CRAFTERS = 'factorecipe_pref_crafters_v1';
 
+/** Loosely-typed shape of user-supplied import JSON: either a single sandbox or a full backup. */
+type ImportPayload = Partial<FullBackupExport> & Partial<GameDatabase>;
+
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -103,7 +111,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const saved = localStorage.getItem(STORAGE_KEY_DATABASES);
     if (saved) {
       try {
-        const parsed = JSON.parse(saved);
+        const parsed = JSON.parse(saved) as GameDatabase[];
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       } catch (e) {
         console.error('Failed to parse databases from storage', e);
@@ -125,7 +133,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const saved = localStorage.getItem(STORAGE_KEY_PROGRESSION);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        return JSON.parse(saved) as Record<string, UserProgression>;
       } catch (e) {
         console.error('Failed to parse progression', e);
       }
@@ -154,7 +162,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const saved = localStorage.getItem(STORAGE_KEY_GOALS);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        return JSON.parse(saved) as ProductionGoal[];
       } catch (e) {
         console.error('Failed to parse goals', e);
       }
@@ -171,18 +179,18 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [activeGoalId, setActiveGoalId] = useState<string | null>(
-    goals.length > 0 ? goals[0].id : null
+    goals.length > 0 ? goals[0].id : null,
   );
 
   // Preferred recipes & crafters
   const [preferredRecipes, setPreferredRecipes] = useState<Record<string, string>>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_PREF_RECIPES);
-    return saved ? JSON.parse(saved) : {};
+    return saved ? (JSON.parse(saved) as Record<string, string>) : {};
   });
 
   const [preferredCrafters, setPreferredCrafters] = useState<Record<string, string>>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_PREF_CRAFTERS);
-    return saved ? JSON.parse(saved) : {};
+    return saved ? (JSON.parse(saved) as Record<string, string>) : {};
   });
 
   const [activeTab, setActiveTab] = useState<
@@ -230,9 +238,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Helper to update active database
   const updateActiveDatabase = (updater: (db: GameDatabase) => GameDatabase) => {
-    setDatabases((prev) =>
-      prev.map((db) => (db.id === activeDatabase.id ? updater(db) : db))
-    );
+    setDatabases((prev) => prev.map((db) => (db.id === activeDatabase.id ? updater(db) : db)));
   };
 
   // Database Management
@@ -291,7 +297,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const validateImportJson = (jsonContent: string): ImportPreview => {
     try {
-      const parsed = JSON.parse(jsonContent);
+      const parsed = JSON.parse(jsonContent) as ImportPayload;
       if (!parsed || typeof parsed !== 'object') {
         return {
           type: 'invalid',
@@ -304,10 +310,19 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Detect full workspace backup
       if (parsed.factorecipe_backup_version || Array.isArray(parsed.databases)) {
-        const dbs = Array.isArray(parsed.databases) ? (parsed.databases as GameDatabase[]) : [];
-        const totalItems = dbs.reduce((acc: number, d: GameDatabase) => acc + (d.items?.length || 0), 0);
-        const totalRecipes = dbs.reduce((acc: number, d: GameDatabase) => acc + (d.recipes?.length || 0), 0);
-        const totalCrafters = dbs.reduce((acc: number, d: GameDatabase) => acc + (d.crafters?.length || 0), 0);
+        const dbs = Array.isArray(parsed.databases) ? parsed.databases : [];
+        const totalItems = dbs.reduce(
+          (acc: number, d: GameDatabase) => acc + (d.items?.length || 0),
+          0,
+        );
+        const totalRecipes = dbs.reduce(
+          (acc: number, d: GameDatabase) => acc + (d.recipes?.length || 0),
+          0,
+        );
+        const totalCrafters = dbs.reduce(
+          (acc: number, d: GameDatabase) => acc + (d.crafters?.length || 0),
+          0,
+        );
 
         return {
           type: 'full_backup',
@@ -352,9 +367,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         icon: parsed.icon || '🏭',
         version: parsed.version || '1.0.0',
         description: parsed.description || '',
-        itemCount: parsed.items.length,
+        itemCount: Array.isArray(parsed.items) ? parsed.items.length : 0,
         crafterCount: Array.isArray(parsed.crafters) ? parsed.crafters.length : 0,
-        recipeCount: parsed.recipes.length,
+        recipeCount: Array.isArray(parsed.recipes) ? parsed.recipes.length : 0,
         errors: [],
       };
     } catch (e) {
@@ -370,7 +385,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const importDatabase = (
     jsonContent: string,
-    mode: 'new' | 'overwrite' = 'new'
+    mode: 'new' | 'overwrite' = 'new',
   ): { success: boolean; message: string } => {
     const preview = validateImportJson(jsonContent);
     if (preview.type === 'invalid') {
@@ -378,11 +393,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      const parsed = JSON.parse(jsonContent);
+      const parsed = JSON.parse(jsonContent) as ImportPayload;
 
       // Handle Full Backup restoration
       if (preview.type === 'full_backup') {
-        const dbs = Array.isArray(parsed.databases) ? (parsed.databases as GameDatabase[]) : [];
+        const dbs = Array.isArray(parsed.databases) ? parsed.databases : [];
         if (dbs.length === 0) {
           return { success: false, message: 'Backup contains no databases.' };
         }
@@ -402,12 +417,17 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Handle Single Sandbox import
       const importedDb: GameDatabase = {
-        id: mode === 'overwrite' ? activeDatabase.id : `game-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-        name: parsed.name,
+        id:
+          mode === 'overwrite'
+            ? activeDatabase.id
+            : `game-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        name: parsed.name || 'Imported Sandbox',
         version: parsed.version || '1.0.0',
         description: parsed.description || '',
         icon: parsed.icon || '🏭',
-        categories: Array.isArray(parsed.categories) ? parsed.categories : ['Raw Resources', 'Crafted'],
+        categories: Array.isArray(parsed.categories)
+          ? parsed.categories
+          : ['Raw Resources', 'Crafted'],
         items: Array.isArray(parsed.items) ? parsed.items : [],
         crafters: Array.isArray(parsed.crafters) ? parsed.crafters : [],
         recipes: Array.isArray(parsed.recipes) ? parsed.recipes : [],
@@ -441,12 +461,16 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const exportDatabaseJson = (databaseId?: string): string => {
-    const targetDb = databaseId ? databases.find((d) => d.id === databaseId) || activeDatabase : activeDatabase;
+    const targetDb = databaseId
+      ? databases.find((d) => d.id === databaseId) || activeDatabase
+      : activeDatabase;
     return JSON.stringify(targetDb, null, 2);
   };
 
   const downloadDatabaseJson = (databaseId?: string) => {
-    const targetDb = databaseId ? databases.find((d) => d.id === databaseId) || activeDatabase : activeDatabase;
+    const targetDb = databaseId
+      ? databases.find((d) => d.id === databaseId) || activeDatabase
+      : activeDatabase;
     const jsonStr = exportDatabaseJson(targetDb.id);
     const blob = new Blob([jsonStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -581,7 +605,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateActiveProgression = (updater: (p: UserProgression) => UserProgression) => {
     setAllProgressions((prev) => {
       const current = prev[activeDatabase.id] || {
-        unlockedRecipeIds: activeDatabase.recipes.filter((r) => r.unlockedByDefault).map((r) => r.id),
+        unlockedRecipeIds: activeDatabase.recipes
+          .filter((r) => r.unlockedByDefault)
+          .map((r) => r.id),
         pinnedItemIds: [],
         completedChecklistIds: [],
       };
@@ -600,7 +626,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         : [...p.unlockedRecipeIds, recipeId];
 
       if (!isUnlocked) {
-        confetti({
+        void confetti({
           particleCount: 40,
           spread: 50,
           origin: { y: 0.8 },
@@ -634,7 +660,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         : [...p.completedChecklistIds, key];
 
       if (!isDone) {
-        confetti({
+        void confetti({
           particleCount: 25,
           spread: 40,
           origin: { y: 0.85 },
@@ -663,7 +689,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Goals
-  const addGoal = (itemId: string, targetRate: number, unit: 'per_minute' | 'per_second' = 'per_minute') => {
+  const addGoal = (
+    itemId: string,
+    targetRate: number,
+    unit: 'per_minute' | 'per_second' = 'per_minute',
+  ) => {
     const newGoal: ProductionGoal = {
       id: `goal-${Date.now()}`,
       itemId,
@@ -696,7 +726,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Active goal & calculation
-  const activeGoal = goals.find((g) => g.id === activeGoalId) || (goals.length > 0 ? goals[0] : null);
+  const activeGoal =
+    goals.find((g) => g.id === activeGoalId) || (goals.length > 0 ? goals[0] : null);
 
   const activeCalculation: CalculationBreakdown | null = activeGoal
     ? calculateProductionChain(
@@ -705,7 +736,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         activeGoal.unit,
         activeDatabase,
         preferredRecipes,
-        preferredCrafters
+        preferredCrafters,
       )
     : null;
 

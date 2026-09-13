@@ -7,12 +7,7 @@ import { formatPower } from '../../utils/calculator';
 import { Cog, Plus, Edit2, Trash2, Zap, Gauge, Layers } from 'lucide-react';
 
 export const CraftersView: React.FC = () => {
-  const {
-    activeDatabase,
-    addCrafter,
-    updateCrafter,
-    deleteCrafter,
-  } = useGame();
+  const { activeDatabase, addCrafter, updateCrafter, deleteCrafter } = useGame();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCrafter, setEditingCrafter] = useState<Crafter | null>(null);
@@ -78,7 +73,8 @@ export const CraftersView: React.FC = () => {
             <span>Crafters & Production Machines</span>
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
-            Define fabrication machines, furnaces, chemical plants, and refineries with their speed multipliers and energy consumption.
+            Define fabrication machines, furnaces, chemical plants, and refineries with their speed
+            multipliers and energy consumption.
           </p>
         </div>
 
@@ -95,7 +91,7 @@ export const CraftersView: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {sortByName(activeDatabase.crafters).map((crafter) => {
           const associatedRecipes = activeDatabase.recipes.filter(
-            (r) => r.defaultCrafterId === crafter.id || r.category === crafter.category
+            (r) => r.defaultCrafterId === crafter.id || r.category === crafter.category,
           );
 
           return (
@@ -149,7 +145,8 @@ export const CraftersView: React.FC = () => {
                 </div>
 
                 <div className="mt-3 text-[11px] text-slate-500 font-mono">
-                  Compatible with {associatedRecipes.length} recipe{associatedRecipes.length === 1 ? '' : 's'}
+                  Compatible with {associatedRecipes.length} recipe
+                  {associatedRecipes.length === 1 ? '' : 's'}
                 </div>
               </div>
 
@@ -166,7 +163,7 @@ export const CraftersView: React.FC = () => {
                   onClick={() => {
                     if (
                       confirm(
-                        `Delete machine "${crafter.name}"? Recipes using it will fall back to other available crafters.`
+                        `Delete machine "${crafter.name}"? Recipes using it will fall back to other available crafters.`,
                       )
                     ) {
                       deleteCrafter(crafter.id);
@@ -229,9 +226,7 @@ export const CraftersView: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-400 font-semibold mb-1">
-                  Speed Multiplier
-                </label>
+                <label className="block text-slate-400 font-semibold mb-1">Speed Multiplier</label>
                 <input
                   type="number"
                   min="0.1"
@@ -269,7 +264,9 @@ export const CraftersView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-slate-400 font-semibold mb-1">Description (Optional)</label>
+              <label className="block text-slate-400 font-semibold mb-1">
+                Description (Optional)
+              </label>
               <textarea
                 value={formDescription}
                 onChange={(e) => setFormDescription(e.target.value)}

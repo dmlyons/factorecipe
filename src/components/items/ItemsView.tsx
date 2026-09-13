@@ -6,14 +6,7 @@ import { Item } from '../../types';
 import { Search, Plus, Edit2, Trash2, Calculator, Tag } from 'lucide-react';
 
 export const ItemsView: React.FC = () => {
-  const {
-    activeDatabase,
-    addItem,
-    updateItem,
-    deleteItem,
-    addGoal,
-    setActiveTab,
-  } = useGame();
+  const { activeDatabase, addItem, updateItem, deleteItem, addGoal, setActiveTab } = useGame();
 
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'raw' | 'crafted'>('all');
@@ -182,10 +175,10 @@ export const ItemsView: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {sortedItems.map((item) => {
           const recipesProducing = activeDatabase.recipes.filter((r) =>
-            r.products.some((p) => p.itemId === item.id)
+            r.products.some((p) => p.itemId === item.id),
           );
           const recipesConsuming = activeDatabase.recipes.filter((r) =>
-            r.ingredients.some((ing) => ing.itemId === item.id)
+            r.ingredients.some((ing) => ing.itemId === item.id),
           );
 
           return (
@@ -261,7 +254,7 @@ export const ItemsView: React.FC = () => {
                     onClick={() => {
                       if (
                         confirm(
-                          `Delete "${item.name}"? This will also remove it from any recipes referencing it.`
+                          `Delete "${item.name}"? This will also remove it from any recipes referencing it.`,
                         )
                       ) {
                         deleteItem(item.id);

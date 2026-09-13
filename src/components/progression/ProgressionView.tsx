@@ -1,15 +1,7 @@
 import React from 'react';
 import { useGame } from '../../context/GameContext';
 import { sortByName, sortStrings } from '../../utils/sort';
-import {
-  Trophy,
-  Unlock,
-  Lock,
-  Sparkles,
-  Calculator,
-  Plus,
-  Trash2,
-} from 'lucide-react';
+import { Trophy, Unlock, Lock, Sparkles, Calculator, Plus, Trash2 } from 'lucide-react';
 
 export const ProgressionView: React.FC = () => {
   const {
@@ -27,12 +19,14 @@ export const ProgressionView: React.FC = () => {
 
   const totalRecipes = activeDatabase.recipes.length;
   const unlockedCount = activeDatabase.recipes.filter((r) =>
-    progression.unlockedRecipeIds.includes(r.id)
+    progression.unlockedRecipeIds.includes(r.id),
   ).length;
   const percentage = totalRecipes > 0 ? Math.round((unlockedCount / totalRecipes) * 100) : 0;
 
   // Group recipes by category
-  const categories = sortStrings(Array.from(new Set(activeDatabase.recipes.map((r) => r.category))));
+  const categories = sortStrings(
+    Array.from(new Set(activeDatabase.recipes.map((r) => r.category))),
+  );
 
   return (
     <div className="space-y-6">
@@ -48,7 +42,8 @@ export const ProgressionView: React.FC = () => {
               Factory Research Status
             </h2>
             <p className="text-xs text-slate-400 mt-1 max-w-lg">
-              Track which crafting recipes and automation processes you have researched in your game world.
+              Track which crafting recipes and automation processes you have researched in your game
+              world.
             </p>
           </div>
 
@@ -57,9 +52,7 @@ export const ProgressionView: React.FC = () => {
               <div className="text-3xl font-black font-mono text-amber-400">
                 {unlockedCount} / {totalRecipes}
               </div>
-              <div className="text-xs text-slate-400 font-mono">
-                {percentage}% unlocked
-              </div>
+              <div className="text-xs text-slate-400 font-mono">{percentage}% unlocked</div>
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -128,9 +121,7 @@ export const ProgressionView: React.FC = () => {
                     {item?.icon || '📦'}
                   </span>
                   <div className="overflow-hidden">
-                    <div className="text-xs font-bold text-slate-200 truncate">
-                      {item?.name}
-                    </div>
+                    <div className="text-xs font-bold text-slate-200 truncate">{item?.name}</div>
                     <div className="text-[11px] text-amber-300 font-mono font-semibold">
                       {g.targetRate} {g.unit === 'per_second' ? 'items/s' : 'items/min'}
                     </div>
@@ -172,7 +163,7 @@ export const ProgressionView: React.FC = () => {
           {categories.map((cat) => {
             const catRecipes = sortByName(activeDatabase.recipes.filter((r) => r.category === cat));
             const catUnlocked = catRecipes.filter((r) =>
-              progression.unlockedRecipeIds.includes(r.id)
+              progression.unlockedRecipeIds.includes(r.id),
             ).length;
             const catPercent = Math.round((catUnlocked / catRecipes.length) * 100);
 
@@ -216,7 +207,10 @@ export const ProgressionView: React.FC = () => {
                       >
                         <div className="flex items-center gap-2 truncate">
                           <span className="text-base">
-                            {r.products[0] ? activeDatabase.items.find((i) => i.id === r.products[0].itemId)?.icon : '⚙️'}
+                            {r.products[0]
+                              ? activeDatabase.items.find((i) => i.id === r.products[0].itemId)
+                                  ?.icon
+                              : '⚙️'}
                           </span>
                           <span className="text-xs font-semibold truncate">{r.name}</span>
                         </div>

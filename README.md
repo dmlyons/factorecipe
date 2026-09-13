@@ -46,7 +46,7 @@ An interactive, sandbox-focused recipe tracker, production tree solver, and fact
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js (v18+)
+- Node.js (`^20.19.0 || ^22.13.0 || >=24`)
 - npm (or pnpm / yarn)
 
 ### Installation
@@ -60,6 +60,14 @@ npm install
 
 # Start local development server
 npm run dev
+```
+
+### Linting & Formatting
+
+```bash
+npm run lint          # ESLint (typescript-eslint, react-hooks, react-refresh)
+npm run format:check  # Prettier check
+npm run format        # Prettier write
 ```
 
 ### Testing
@@ -135,8 +143,10 @@ factorecipe/
 │   ├── satisfactory-1.2.json          # Example importable sandbox dataset
 │   └── star-rupture.json              # Example importable sandbox dataset
 ├── .github/workflows/
-│   ├── ci.yml                         # Type-check, build, test on push/PR to main
+│   ├── ci.yml                         # Lint, format-check, type-check, build, test on push/PR to main
 │   └── deploy.yml                     # Build & deploy dist/ to GitHub Pages
+├── eslint.config.js                   # ESLint flat config
+├── .prettierrc.json                   # Prettier options
 ├── index.html
 ├── package.json
 ├── tailwind.config.js

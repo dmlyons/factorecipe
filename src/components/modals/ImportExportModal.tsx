@@ -133,7 +133,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
     if (!preview || preview.type === 'invalid') return;
     const result = importDatabase(importJsonText, importDestination);
     if (result.success) {
-      confetti({
+      void confetti({
         particleCount: 50,
         spread: 60,
         origin: { y: 0.7 },
@@ -221,7 +221,8 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
                     <span className="truncate">Current Sandbox</span>
                   </div>
                   <div className="text-[11px] text-slate-400 mt-1 truncate">
-                    {activeDatabase.name} ({activeDatabase.items.length} items, {activeDatabase.recipes.length} recipes)
+                    {activeDatabase.name} ({activeDatabase.items.length} items,{' '}
+                    {activeDatabase.recipes.length} recipes)
                   </div>
                 </button>
 
@@ -255,7 +256,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
                 </button>
 
                 <button
-                  onClick={handleCopy}
+                  onClick={() => void handleCopy()}
                   className="py-2.5 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs rounded-xl transition flex items-center gap-2"
                 >
                   {copied ? (
@@ -276,11 +277,9 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
               <div>
                 <div className="flex items-center justify-between text-xs text-slate-400 mb-1.5">
                   <span className="font-semibold uppercase tracking-wider text-[10px]">
-                    Payload Preview ({Math.round(currentExportJson.length / 1024 * 10) / 10} KB)
+                    Payload Preview ({Math.round((currentExportJson.length / 1024) * 10) / 10} KB)
                   </span>
-                  <span className="font-mono text-[11px] text-slate-500">
-                    application/json
-                  </span>
+                  <span className="font-mono text-[11px] text-slate-500">application/json</span>
                 </div>
                 <textarea
                   readOnly
@@ -316,7 +315,8 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
                   <FileJson className="w-5 h-5" />
                 </div>
                 <div className="text-xs text-slate-300 font-semibold">
-                  Drop a sandbox <span className="text-cyan-400">.json</span> file here, or click to browse
+                  Drop a sandbox <span className="text-cyan-400">.json</span> file here, or click to
+                  browse
                 </div>
                 <div className="text-[11px] text-slate-500">
                   Accepts individual factory sandbox files or full workspace backups
@@ -421,11 +421,13 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
                             Import Destination:
                           </div>
                           <div className="grid grid-cols-2 gap-2 text-xs">
-                            <label className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition ${
-                              importDestination === 'new'
-                                ? 'bg-cyan-500/15 border-cyan-500/80 text-cyan-200'
-                                : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
-                            }`}>
+                            <label
+                              className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition ${
+                                importDestination === 'new'
+                                  ? 'bg-cyan-500/15 border-cyan-500/80 text-cyan-200'
+                                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                              }`}
+                            >
                               <input
                                 type="radio"
                                 name="importDest"
@@ -436,11 +438,13 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
                               <span className="font-medium">Add as New Sandbox</span>
                             </label>
 
-                            <label className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition ${
-                              importDestination === 'overwrite'
-                                ? 'bg-amber-500/15 border-amber-500/80 text-amber-200'
-                                : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
-                            }`}>
+                            <label
+                              className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition ${
+                                importDestination === 'overwrite'
+                                  ? 'bg-amber-500/15 border-amber-500/80 text-amber-200'
+                                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                              }`}
+                            >
                               <input
                                 type="radio"
                                 name="importDest"
@@ -469,8 +473,8 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
                     {preview.type === 'full_backup'
                       ? `Restore Full Workspace (${preview.databaseCount || 0} Sandboxes)`
                       : importDestination === 'new'
-                      ? 'Import as New Sandbox'
-                      : `Overwrite "${activeDatabase.name}" Sandbox`}
+                        ? 'Import as New Sandbox'
+                        : `Overwrite "${activeDatabase.name}" Sandbox`}
                   </span>
                 </button>
               )}
