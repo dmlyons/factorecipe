@@ -1,0 +1,365 @@
+{
+  "id": "star-rupture-example",
+  "name": "Star Rupture (Example)",
+  "version": "Early Access (Jan 2026)",
+  "description": "Example sandbox modeling a documented subset of Star Rupture's production chain: Titanium/Wolfram/Calcium ore and Helium-3 extraction through Smelter, Fabricator, and Furnace processing, as listed on the Star Rupture Wiki (starrupture.wiki.gg) building pages as of January 2026. Deeper Assembler-tier recipes (Accumulator, Condenser, Electromagnet, Laser Emitter, Pressure Tank, Resonator) are intentionally omitted because several of their ingredients (Battery, Pump, Valve, Generator, Liquid Helium, Synthetic Resin, Nanofibre, Electromagnetic Coil, Lens, Sulfuric Acid) have no documented producing recipe yet — adding them would break referential integrity. Verify exact numbers against the Star Rupture Wiki before relying on them, as this is an Early Access game subject to balance changes.",
+  "icon": "🛰️",
+  "categories": [
+    "Raw Resources",
+    "Bars",
+    "Basic Parts",
+    "Powders & Ceramics",
+    "Standard Parts",
+    "Advanced Components"
+  ],
+  "crafters": [
+    {
+      "id": "ore-excavator",
+      "name": "Ore Excavator",
+      "icon": "⛏️",
+      "speed": 1.0,
+      "powerKW": 5000,
+      "category": "Mining",
+      "description": "Crucial during the early phase of the mission. Extracts Titanium, Wolfram, and Calcium ore from surface deposits."
+    },
+    {
+      "id": "helium-3-extractor",
+      "name": "Helium-3 Extractor",
+      "icon": "🌌",
+      "speed": 1.0,
+      "powerKW": 15000,
+      "category": "Extraction",
+      "description": "Extracts Helium-3 gas from Helium-3 deposits."
+    },
+    {
+      "id": "smelter",
+      "name": "Smelter",
+      "icon": "🔥",
+      "speed": 1.0,
+      "powerKW": 5000,
+      "category": "Smelting",
+      "description": "Refines raw Titanium, Wolfram, and Calcium ore into Bars and Blocks."
+    },
+    {
+      "id": "fabricator",
+      "name": "Fabricator",
+      "icon": "⚙️",
+      "speed": 1.0,
+      "powerKW": 10000,
+      "category": "Fabrication",
+      "description": "Basic production building. Uses nanoscale printing to turn Bars into structural parts, rods, wire, and mechanisms."
+    },
+    {
+      "id": "furnace",
+      "name": "Furnace",
+      "icon": "🏭",
+      "speed": 1.0,
+      "powerKW": 20000,
+      "category": "Processing",
+      "description": "Basic production building. Uses heat to turn Bars, powders, and gas into ceramics, glass, and electronic components."
+    }
+  ],
+  "items": [
+    { "id": "titanium-ore", "name": "Titanium Ore", "icon": "🪨", "category": "Raw Resources", "isRaw": true, "unit": "items" },
+    { "id": "wolfram-ore", "name": "Wolfram Ore", "icon": "⚫", "category": "Raw Resources", "isRaw": true, "unit": "items" },
+    { "id": "calcium-ore", "name": "Calcium Ore", "icon": "⚪", "category": "Raw Resources", "isRaw": true, "unit": "items" },
+    { "id": "helium-3", "name": "Helium-3", "icon": "⚛️", "category": "Raw Resources", "isRaw": true, "unit": "items" },
+
+    { "id": "titanium-bar", "name": "Titanium Bar", "icon": "🔩", "category": "Bars", "isRaw": false, "unit": "items" },
+    { "id": "wolfram-bar", "name": "Wolfram Bar", "icon": "🔗", "category": "Bars", "isRaw": false, "unit": "items" },
+    { "id": "calcium-block", "name": "Calcium Block", "icon": "🧊", "category": "Bars", "isRaw": false, "unit": "items" },
+
+    { "id": "basic-building-material", "name": "Basic Building Material", "icon": "🧱", "category": "Basic Parts", "isRaw": false, "unit": "items" },
+    { "id": "calcite-sheets", "name": "Calcite Sheets", "icon": "📄", "category": "Basic Parts", "isRaw": false, "unit": "items" },
+    { "id": "titanium-rod", "name": "Titanium Rod", "icon": "📏", "category": "Basic Parts", "isRaw": false, "unit": "items" },
+    { "id": "titanium-sheet", "name": "Titanium Sheet", "icon": "▭", "category": "Basic Parts", "isRaw": false, "unit": "items" },
+    { "id": "titanium-beam", "name": "Titanium Beam", "icon": "🏗️", "category": "Basic Parts", "isRaw": false, "unit": "items" },
+    { "id": "wolfram-wire", "name": "Wolfram Wire", "icon": "〰️", "category": "Basic Parts", "isRaw": false, "unit": "items" },
+    { "id": "wolfram-plate", "name": "Wolfram Plate", "icon": "🛡️", "category": "Basic Parts", "isRaw": false, "unit": "items" },
+
+    { "id": "wolfram-powder", "name": "Wolfram Powder", "icon": "✨", "category": "Powders & Ceramics", "isRaw": false, "unit": "items" },
+    { "id": "calcium-powder", "name": "Calcium Powder", "icon": "🧂", "category": "Powders & Ceramics", "isRaw": false, "unit": "items" },
+    { "id": "ceramics", "name": "Ceramics", "icon": "🏺", "category": "Powders & Ceramics", "isRaw": false, "unit": "items" },
+    { "id": "glass", "name": "Glass", "icon": "🪟", "category": "Powders & Ceramics", "isRaw": false, "unit": "items" },
+
+    { "id": "rotor", "name": "Rotor", "icon": "🌀", "category": "Standard Parts", "isRaw": false, "unit": "items" },
+    { "id": "tube", "name": "Tube", "icon": "▬", "category": "Standard Parts", "isRaw": false, "unit": "items" },
+    { "id": "stabilizer", "name": "Stabilizer", "icon": "⚖️", "category": "Standard Parts", "isRaw": false, "unit": "items" },
+    { "id": "stator", "name": "Stator", "icon": "🧲", "category": "Standard Parts", "isRaw": false, "unit": "items" },
+    { "id": "titanium-housing", "name": "Titanium Housing", "icon": "📦", "category": "Standard Parts", "isRaw": false, "unit": "items" },
+    { "id": "applicator", "name": "Applicator", "icon": "💉", "category": "Standard Parts", "isRaw": false, "unit": "items" },
+
+    { "id": "inductor", "name": "Inductor", "icon": "🔌", "category": "Advanced Components", "isRaw": false, "unit": "items" },
+    { "id": "synthetic-silicon", "name": "Synthetic Silicon", "icon": "💎", "category": "Advanced Components", "isRaw": false, "unit": "items" },
+    { "id": "electronics", "name": "Electronics", "icon": "💻", "category": "Advanced Components", "isRaw": false, "unit": "items" },
+    { "id": "chemicals", "name": "Chemicals", "icon": "🧪", "category": "Advanced Components", "isRaw": false, "unit": "items" }
+  ],
+  "recipes": [
+    {
+      "id": "recipe-titanium-bar",
+      "name": "Titanium Bar",
+      "category": "Smelting",
+      "craftTime": 2,
+      "ingredients": [{ "itemId": "titanium-ore", "amount": 2 }],
+      "products": [{ "itemId": "titanium-bar", "amount": 2 }],
+      "defaultCrafterId": "smelter",
+      "unlockedByDefault": true
+    },
+    {
+      "id": "recipe-wolfram-bar",
+      "name": "Wolfram Bar",
+      "category": "Smelting",
+      "craftTime": 2,
+      "ingredients": [{ "itemId": "wolfram-ore", "amount": 2 }],
+      "products": [{ "itemId": "wolfram-bar", "amount": 2 }],
+      "defaultCrafterId": "smelter",
+      "unlockedByDefault": true
+    },
+    {
+      "id": "recipe-calcium-block",
+      "name": "Calcium Block",
+      "category": "Smelting",
+      "craftTime": 2,
+      "ingredients": [{ "itemId": "calcium-ore", "amount": 2 }],
+      "products": [{ "itemId": "calcium-block", "amount": 2 }],
+      "defaultCrafterId": "smelter",
+      "unlockedByDefault": true
+    },
+    {
+      "id": "recipe-basic-building-material",
+      "name": "Basic Building Material",
+      "category": "Fabrication",
+      "craftTime": 2,
+      "ingredients": [
+        { "itemId": "titanium-ore", "amount": 1 },
+        { "itemId": "wolfram-ore", "amount": 1 }
+      ],
+      "products": [{ "itemId": "basic-building-material", "amount": 10 }],
+      "defaultCrafterId": "fabricator",
+      "unlockedByDefault": true
+    },
+    {
+      "id": "recipe-calcite-sheets",
+      "name": "Calcite Sheets",
+      "category": "Fabrication",
+      "craftTime": 2,
+      "ingredients": [{ "itemId": "calcium-block", "amount": 1 }],
+      "products": [{ "itemId": "calcite-sheets", "amount": 2 }],
+      "defaultCrafterId": "fabricator"
+    },
+    {
+      "id": "recipe-titanium-rod",
+      "name": "Titanium Rod",
+      "category": "Fabrication",
+      "craftTime": 2,
+      "ingredients": [{ "itemId": "titanium-bar", "amount": 1 }],
+      "products": [{ "itemId": "titanium-rod", "amount": 1 }],
+      "defaultCrafterId": "fabricator",
+      "unlockedByDefault": true
+    },
+    {
+      "id": "recipe-titanium-sheet",
+      "name": "Titanium Sheet",
+      "category": "Fabrication",
+      "craftTime": 2,
+      "ingredients": [{ "itemId": "titanium-bar", "amount": 1 }],
+      "products": [{ "itemId": "titanium-sheet", "amount": 2 }],
+      "defaultCrafterId": "fabricator",
+      "unlockedByDefault": true
+    },
+    {
+      "id": "recipe-titanium-beam",
+      "name": "Titanium Beam",
+      "category": "Fabrication",
+      "craftTime": 3,
+      "ingredients": [{ "itemId": "titanium-bar", "amount": 2 }],
+      "products": [{ "itemId": "titanium-beam", "amount": 3 }],
+      "defaultCrafterId": "fabricator"
+    },
+    {
+      "id": "recipe-wolfram-wire",
+      "name": "Wolfram Wire",
+      "category": "Fabrication",
+      "craftTime": 4,
+      "ingredients": [{ "itemId": "wolfram-bar", "amount": 1 }],
+      "products": [{ "itemId": "wolfram-wire", "amount": 2 }],
+      "defaultCrafterId": "fabricator",
+      "unlockedByDefault": true
+    },
+    {
+      "id": "recipe-wolfram-plate",
+      "name": "Wolfram Plate",
+      "category": "Fabrication",
+      "craftTime": 2,
+      "ingredients": [{ "itemId": "wolfram-bar", "amount": 2 }],
+      "products": [{ "itemId": "wolfram-plate", "amount": 2 }],
+      "defaultCrafterId": "fabricator"
+    },
+    {
+      "id": "recipe-rotor",
+      "name": "Rotor",
+      "category": "Fabrication",
+      "craftTime": 6,
+      "ingredients": [
+        { "itemId": "titanium-rod", "amount": 2 },
+        { "itemId": "wolfram-wire", "amount": 2 }
+      ],
+      "products": [{ "itemId": "rotor", "amount": 1 }],
+      "defaultCrafterId": "fabricator"
+    },
+    {
+      "id": "recipe-tube",
+      "name": "Tube",
+      "category": "Fabrication",
+      "craftTime": 2,
+      "ingredients": [
+        { "itemId": "titanium-rod", "amount": 1 },
+        { "itemId": "titanium-sheet", "amount": 1 }
+      ],
+      "products": [{ "itemId": "tube", "amount": 2 }],
+      "defaultCrafterId": "fabricator"
+    },
+    {
+      "id": "recipe-stabilizer",
+      "name": "Stabilizer",
+      "category": "Fabrication",
+      "craftTime": 3,
+      "ingredients": [
+        { "itemId": "rotor", "amount": 1 },
+        { "itemId": "titanium-rod", "amount": 2 }
+      ],
+      "products": [{ "itemId": "stabilizer", "amount": 1 }],
+      "defaultCrafterId": "fabricator"
+    },
+    {
+      "id": "recipe-stator",
+      "name": "Stator",
+      "category": "Fabrication",
+      "craftTime": 3,
+      "ingredients": [
+        { "itemId": "titanium-housing", "amount": 2 },
+        { "itemId": "wolfram-wire", "amount": 1 }
+      ],
+      "products": [{ "itemId": "stator", "amount": 1 }],
+      "defaultCrafterId": "fabricator"
+    },
+    {
+      "id": "recipe-applicator",
+      "name": "Applicator",
+      "category": "Fabrication",
+      "craftTime": 4,
+      "ingredients": [
+        { "itemId": "tube", "amount": 8 },
+        { "itemId": "glass", "amount": 2 }
+      ],
+      "products": [{ "itemId": "applicator", "amount": 1 }],
+      "defaultCrafterId": "fabricator"
+    },
+    {
+      "id": "recipe-wolfram-powder",
+      "name": "Wolfram Powder",
+      "category": "Processing",
+      "craftTime": 2,
+      "ingredients": [{ "itemId": "wolfram-bar", "amount": 1 }],
+      "products": [{ "itemId": "wolfram-powder", "amount": 3 }],
+      "defaultCrafterId": "furnace"
+    },
+    {
+      "id": "recipe-calcium-powder",
+      "name": "Calcium Powder",
+      "category": "Processing",
+      "craftTime": 3,
+      "ingredients": [{ "itemId": "calcium-block", "amount": 1 }],
+      "products": [{ "itemId": "calcium-powder", "amount": 3 }],
+      "defaultCrafterId": "furnace"
+    },
+    {
+      "id": "recipe-ceramics",
+      "name": "Ceramics",
+      "category": "Processing",
+      "craftTime": 2,
+      "ingredients": [
+        { "itemId": "calcite-sheets", "amount": 1 },
+        { "itemId": "wolfram-powder", "amount": 1 }
+      ],
+      "products": [{ "itemId": "ceramics", "amount": 2 }],
+      "defaultCrafterId": "furnace"
+    },
+    {
+      "id": "recipe-titanium-housing",
+      "name": "Titanium Housing",
+      "category": "Processing",
+      "craftTime": 2,
+      "ingredients": [
+        { "itemId": "titanium-beam", "amount": 1 },
+        { "itemId": "titanium-sheet", "amount": 2 }
+      ],
+      "products": [{ "itemId": "titanium-housing", "amount": 1 }],
+      "defaultCrafterId": "furnace"
+    },
+    {
+      "id": "recipe-glass",
+      "name": "Glass",
+      "category": "Processing",
+      "craftTime": 3,
+      "ingredients": [
+        { "itemId": "helium-3", "amount": 1 },
+        { "itemId": "calcium-powder", "amount": 2 }
+      ],
+      "products": [{ "itemId": "glass", "amount": 1 }],
+      "defaultCrafterId": "furnace"
+    },
+    {
+      "id": "recipe-inductor",
+      "name": "Inductor",
+      "category": "Processing",
+      "craftTime": 4,
+      "ingredients": [
+        { "itemId": "tube", "amount": 2 },
+        { "itemId": "wolfram-wire", "amount": 1 },
+        { "itemId": "ceramics", "amount": 2 }
+      ],
+      "products": [{ "itemId": "inductor", "amount": 2 }],
+      "defaultCrafterId": "furnace"
+    },
+    {
+      "id": "recipe-synthetic-silicon",
+      "name": "Synthetic Silicon",
+      "category": "Processing",
+      "craftTime": 2,
+      "ingredients": [
+        { "itemId": "calcium-powder", "amount": 2 },
+        { "itemId": "helium-3", "amount": 1 },
+        { "itemId": "ceramics", "amount": 2 }
+      ],
+      "products": [{ "itemId": "synthetic-silicon", "amount": 2 }],
+      "defaultCrafterId": "furnace"
+    },
+    {
+      "id": "recipe-electronics",
+      "name": "Electronics",
+      "category": "Processing",
+      "craftTime": 5,
+      "ingredients": [
+        { "itemId": "synthetic-silicon", "amount": 2 },
+        { "itemId": "inductor", "amount": 1 },
+        { "itemId": "stator", "amount": 1 }
+      ],
+      "products": [{ "itemId": "electronics", "amount": 1 }],
+      "defaultCrafterId": "furnace"
+    },
+    {
+      "id": "recipe-chemicals",
+      "name": "Chemicals",
+      "category": "Processing",
+      "craftTime": 2,
+      "ingredients": [
+        { "itemId": "synthetic-silicon", "amount": 1 },
+        { "itemId": "wolfram-powder", "amount": 3 },
+        { "itemId": "helium-3", "amount": 1 }
+      ],
+      "products": [{ "itemId": "chemicals", "amount": 2 }],
+      "defaultCrafterId": "furnace"
+    }
+  ]
+}
