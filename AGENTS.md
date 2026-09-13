@@ -183,6 +183,9 @@ npm run preview
 4. **Testing Discipline**:
    - Pure logic (calculation, formatting, validation) gets colocated `*.test.ts` unit tests; UI components currently have no test harness — verify those manually (`npm run dev`) instead of adding ad hoc component tests.
    - A test earns its place only if a plausible bug in the covered function would fail it; don't pin incidental output formatting or restate the implementation.
+5. **Git Workflow**:
+   - Never `git commit` or `git push` unless the user explicitly asks or directly instructs it in that turn. Staged/local diffs are fine to leave uncommitted for review.
+   - All changes go on a feature branch (never commit directly to `main`); open a pull request and merge into `main` through the PR rather than pushing straight to it.
 
 ---
 
