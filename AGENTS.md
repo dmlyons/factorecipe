@@ -167,6 +167,10 @@ npm test
 npm run preview
 ```
 
+### Continuous Integration (`.github/workflows/ci.yml`)
+
+GitHub Actions runs `npm run build` (type-check + production build) and `npm test` on every push to `main` and every pull request targeting `main`. A PR with a failing build or test suite should not be merged.
+
 ### Critical Rules for AI Agents Editing Code
 1. **Maintain TypeScript Strictness**:
    - Do NOT leave unused imports or local variables (the project uses `"noUnusedLocals": true` and `"noUnusedParameters": true`).
