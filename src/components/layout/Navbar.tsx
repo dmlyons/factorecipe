@@ -93,19 +93,19 @@ export const Navbar: React.FC = () => {
             </div>
 
             {/* Sandbox Database Selector */}
-            <div className="hidden md:flex items-center pl-3 border-l border-slate-800 flex-shrink-0">
+            <div className="hidden xl:flex items-center pl-3 border-l border-slate-800 flex-shrink-0">
               <div className="relative" ref={dbMenuRef}>
                 <button
                   type="button"
                   onClick={() => setDbMenuOpen((open) => !open)}
-                  className="flex items-center gap-1.5 bg-slate-900 border border-slate-700/80 hover:border-slate-600 text-xs font-semibold text-slate-200 py-1.5 pl-2.5 pr-2 rounded-lg cursor-pointer focus:outline-none focus:border-amber-400 transition max-w-[180px]"
-                  title="Switch sandbox or manage databases"
+                  className="flex items-center gap-1 bg-slate-900 border border-slate-700/80 hover:border-slate-600 text-xs font-semibold text-slate-200 py-1.5 px-2 rounded-lg cursor-pointer focus:outline-none focus:border-amber-400 transition"
+                  title={`Active sandbox: ${activeDatabase.name} (click to switch)`}
                   aria-haspopup="listbox"
                   aria-expanded={dbMenuOpen}
+                  aria-label="Switch sandbox or manage databases"
                 >
-                  <span className="text-xs flex-shrink-0">{activeDatabase.icon}</span>
-                  <span className="truncate">{activeDatabase.name}</span>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                  <span className="text-xs">{activeDatabase.icon}</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                 </button>
                 {dbMenuOpen && (
                   <div
@@ -144,8 +144,8 @@ export const Navbar: React.FC = () => {
             </div>
           </div>
 
-          {/* Desktop Navigation & Utilities (>= 768px) */}
-          <div className="hidden md:flex items-center gap-2 flex-shrink-0">
+          {/* Desktop Navigation & Utilities (>= 1280px) */}
+          <div className="hidden xl:flex items-center gap-2 flex-shrink-0">
             {/* Primary Tabs */}
             <nav className="flex items-center gap-1">
               {primaryTabs.map((tab) => {
@@ -195,8 +195,8 @@ export const Navbar: React.FC = () => {
             </button>
           </div>
 
-          {/* Mobile Hamburger Toggle (< 768px) */}
-          <div className="flex md:hidden items-center gap-2">
+          {/* Mobile Hamburger Toggle (< 1280px) */}
+          <div className="flex xl:hidden items-center gap-2">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition focus:outline-none border border-slate-800"
@@ -208,9 +208,9 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Drawer Dropdown (< 768px) */}
+      {/* Mobile Drawer Dropdown (< 1280px) */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-800/80 bg-[#0c121e]/98 backdrop-blur-2xl px-4 py-4 space-y-3 shadow-2xl animate-in fade-in duration-150">
+        <div className="xl:hidden border-t border-slate-800/80 bg-[#0c121e]/98 backdrop-blur-2xl px-4 py-4 space-y-3 shadow-2xl animate-in fade-in duration-150">
           {/* Mobile Database Selector */}
           <div>
             <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
