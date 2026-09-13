@@ -42,7 +42,8 @@ factorecipe/
 │   │   └── useEscapeKey.ts          # Shared hook: closes a modal/dropdown on Escape while it is open
 │   ├── utils/
 │   │   ├── calculator.ts            # DAG recursion engine, rate conversions, power summation, belt rates
-│   │   └── calculator.test.ts       # Vitest unit tests for the calculation engine
+│   │   ├── calculator.test.ts       # Vitest unit tests for the calculation engine
+│   │   └── sort.ts                  # sortByName/sortStrings: shared Intl.Collator-based alphabetical ordering for catalogs & dropdowns
 │   ├── context/
 │   │   └── GameContext.tsx          # Global state, persistence hooks, and action dispatches
 │   ├── components/
@@ -191,6 +192,7 @@ npm run preview
    - Retain the industrial dark palette (`bg-[#090d16]`, `bg-slate-900`, `border-slate-800`).
    - Use `formatRate` and `formatPower` for clean numerical formatting (avoid long floating-point decimals like `1.33333333333`).
    - For icons, use standard Lucide icons and emojis consistently.
+   - Any list of items/crafters/recipes/categories/sandboxes rendered as a catalog grid, filter-chip row, or `<select>`/picker MUST be sorted with `sortByName`/`sortStrings` (`src/utils/sort.ts`) rather than left in raw insertion order — long unsorted lists are hard to scan. Exception: user-ordered lists (e.g. pinned goal tabs) and fixed-structure nav stay in their existing order.
 
 4. **Testing Discipline**:
    - Pure logic (calculation, formatting, validation) gets colocated `*.test.ts` unit tests; UI components currently have no test harness — verify those manually (`npm run dev`) instead of adding ad hoc component tests.
