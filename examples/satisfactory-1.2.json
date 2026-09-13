@@ -1,0 +1,403 @@
+{
+  "id": "satisfactory-1-2-example",
+  "name": "Satisfactory 1.2 (Example)",
+  "version": "1.2.0",
+  "description": "Example sandbox modeling a subset of Satisfactory 1.2's default (non-alternate) production chain: ore/oil extraction through Smelter, Foundry, Constructor, Assembler, Manufacturer, and Refinery recipes. Craft times and ratios follow standard base-game values; a few deep-tier ratios (e.g. Encased Industrial Beam) are rounded for demonstration. Import via Settings > Import Sandbox to try it, or verify exact numbers against the Satisfactory Wiki before relying on them.",
+  "icon": "🛰️",
+  "categories": [
+    "Raw Resources",
+    "Ingots",
+    "Basic Parts",
+    "Standard Parts",
+    "Advanced Parts",
+    "Petrochemicals"
+  ],
+  "crafters": [
+    {
+      "id": "miner-mk1",
+      "name": "Miner Mk.1",
+      "icon": "⛏️",
+      "speed": 1.0,
+      "powerKW": 5,
+      "category": "Mining",
+      "description": "Extracts solid ores (Iron, Copper, Limestone, Coal, Caterium) from resource nodes."
+    },
+    {
+      "id": "smelter",
+      "name": "Smelter",
+      "icon": "🔥",
+      "speed": 1.0,
+      "powerKW": 4,
+      "category": "Smelting",
+      "description": "Smelts raw ore into base ingots."
+    },
+    {
+      "id": "foundry",
+      "name": "Foundry",
+      "icon": "🏗️",
+      "speed": 1.0,
+      "powerKW": 16,
+      "category": "Smelting",
+      "description": "Alloys multiple raw inputs into advanced ingots such as Steel."
+    },
+    {
+      "id": "constructor",
+      "name": "Constructor",
+      "icon": "⚙️",
+      "speed": 1.0,
+      "powerKW": 4,
+      "category": "Crafting",
+      "description": "Single-ingredient fabricator for basic parts."
+    },
+    {
+      "id": "assembler",
+      "name": "Assembler",
+      "icon": "🔧",
+      "speed": 1.0,
+      "powerKW": 15,
+      "category": "Crafting",
+      "description": "Two-ingredient fabricator for standard and advanced parts."
+    },
+    {
+      "id": "manufacturer",
+      "name": "Manufacturer",
+      "icon": "🏭",
+      "speed": 1.0,
+      "powerKW": 55,
+      "category": "Crafting",
+      "description": "Multi-ingredient fabricator for the most complex parts."
+    },
+    {
+      "id": "refinery",
+      "name": "Refinery",
+      "icon": "🛢️",
+      "speed": 1.0,
+      "powerKW": 30,
+      "category": "Refining",
+      "description": "Refines Crude Oil and its derivatives into plastics, rubber, and fuel."
+    }
+  ],
+  "items": [
+    { "id": "iron-ore", "name": "Iron Ore", "icon": "🪨", "category": "Raw Resources", "isRaw": true, "unit": "items" },
+    { "id": "copper-ore", "name": "Copper Ore", "icon": "🟠", "category": "Raw Resources", "isRaw": true, "unit": "items" },
+    { "id": "limestone", "name": "Limestone", "icon": "🧱", "category": "Raw Resources", "isRaw": true, "unit": "items" },
+    { "id": "coal", "name": "Coal", "icon": "⬛", "category": "Raw Resources", "isRaw": true, "unit": "items" },
+    { "id": "caterium-ore", "name": "Caterium Ore", "icon": "🟡", "category": "Raw Resources", "isRaw": true, "unit": "items" },
+    { "id": "crude-oil", "name": "Crude Oil", "icon": "🛢️", "category": "Raw Resources", "isRaw": true, "unit": "m³" },
+
+    { "id": "iron-ingot", "name": "Iron Ingot", "icon": "🔩", "category": "Ingots", "isRaw": false, "unit": "items" },
+    { "id": "copper-ingot", "name": "Copper Ingot", "icon": "🥉", "category": "Ingots", "isRaw": false, "unit": "items" },
+    { "id": "caterium-ingot", "name": "Caterium Ingot", "icon": "🟨", "category": "Ingots", "isRaw": false, "unit": "items" },
+    { "id": "steel-ingot", "name": "Steel Ingot", "icon": "🛡️", "category": "Ingots", "isRaw": false, "unit": "items" },
+
+    { "id": "iron-plate", "name": "Iron Plate", "icon": "▭", "category": "Basic Parts", "isRaw": false, "unit": "items" },
+    { "id": "iron-rod", "name": "Iron Rod", "icon": "📏", "category": "Basic Parts", "isRaw": false, "unit": "items" },
+    { "id": "screw", "name": "Screw", "icon": "🔩", "category": "Basic Parts", "isRaw": false, "unit": "items" },
+    { "id": "copper-wire", "name": "Wire", "icon": "〰️", "category": "Basic Parts", "isRaw": false, "unit": "items" },
+    { "id": "cable", "name": "Cable", "icon": "🔌", "category": "Basic Parts", "isRaw": false, "unit": "items" },
+    { "id": "copper-sheet", "name": "Copper Sheet", "icon": "🟫", "category": "Basic Parts", "isRaw": false, "unit": "items" },
+    { "id": "concrete", "name": "Concrete", "icon": "🧊", "category": "Basic Parts", "isRaw": false, "unit": "items" },
+    { "id": "quickwire", "name": "Quickwire", "icon": "✨", "category": "Basic Parts", "isRaw": false, "unit": "items" },
+    { "id": "steel-beam", "name": "Steel Beam", "icon": "🏗️", "category": "Basic Parts", "isRaw": false, "unit": "items" },
+    { "id": "steel-pipe", "name": "Steel Pipe", "icon": "🧵", "category": "Basic Parts", "isRaw": false, "unit": "items" },
+
+    { "id": "reinforced-iron-plate", "name": "Reinforced Iron Plate", "icon": "🟩", "category": "Standard Parts", "isRaw": false, "unit": "items" },
+    { "id": "rotor", "name": "Rotor", "icon": "🌀", "category": "Standard Parts", "isRaw": false, "unit": "items" },
+    { "id": "stator", "name": "Stator", "icon": "🧲", "category": "Standard Parts", "isRaw": false, "unit": "items" },
+    { "id": "motor", "name": "Motor", "icon": "⚡", "category": "Standard Parts", "isRaw": false, "unit": "items" },
+    { "id": "modular-frame", "name": "Modular Frame", "icon": "🔳", "category": "Standard Parts", "isRaw": false, "unit": "items" },
+    { "id": "smart-plating", "name": "Smart Plating", "icon": "💠", "category": "Standard Parts", "isRaw": false, "unit": "items" },
+
+    { "id": "encased-industrial-beam", "name": "Encased Industrial Beam", "icon": "🏢", "category": "Advanced Parts", "isRaw": false, "unit": "items" },
+    { "id": "heavy-modular-frame", "name": "Heavy Modular Frame", "icon": "🗜️", "category": "Advanced Parts", "isRaw": false, "unit": "items" },
+    { "id": "circuit-board", "name": "Circuit Board", "icon": "💻", "category": "Advanced Parts", "isRaw": false, "unit": "items" },
+
+    { "id": "plastic", "name": "Plastic", "icon": "🧴", "category": "Petrochemicals", "isRaw": false, "unit": "items" },
+    { "id": "rubber", "name": "Rubber", "icon": "⚫", "category": "Petrochemicals", "isRaw": false, "unit": "items" },
+    { "id": "heavy-oil-residue", "name": "Heavy Oil Residue", "icon": "🟤", "category": "Petrochemicals", "isRaw": false, "unit": "m³" },
+    { "id": "fuel", "name": "Fuel", "icon": "⛽", "category": "Petrochemicals", "isRaw": false, "unit": "m³" }
+  ],
+  "recipes": [
+    {
+      "id": "recipe-iron-ingot",
+      "name": "Iron Ingot",
+      "category": "Smelting",
+      "craftTime": 2,
+      "ingredients": [{ "itemId": "iron-ore", "amount": 1 }],
+      "products": [{ "itemId": "iron-ingot", "amount": 1 }],
+      "defaultCrafterId": "smelter",
+      "unlockedByDefault": true
+    },
+    {
+      "id": "recipe-copper-ingot",
+      "name": "Copper Ingot",
+      "category": "Smelting",
+      "craftTime": 2,
+      "ingredients": [{ "itemId": "copper-ore", "amount": 1 }],
+      "products": [{ "itemId": "copper-ingot", "amount": 1 }],
+      "defaultCrafterId": "smelter",
+      "unlockedByDefault": true
+    },
+    {
+      "id": "recipe-caterium-ingot",
+      "name": "Caterium Ingot",
+      "category": "Smelting",
+      "craftTime": 4,
+      "ingredients": [{ "itemId": "caterium-ore", "amount": 3 }],
+      "products": [{ "itemId": "caterium-ingot", "amount": 1 }],
+      "defaultCrafterId": "smelter"
+    },
+    {
+      "id": "recipe-steel-ingot",
+      "name": "Steel Ingot",
+      "category": "Smelting",
+      "craftTime": 4,
+      "ingredients": [
+        { "itemId": "iron-ore", "amount": 3 },
+        { "itemId": "coal", "amount": 3 }
+      ],
+      "products": [{ "itemId": "steel-ingot", "amount": 3 }],
+      "defaultCrafterId": "foundry"
+    },
+    {
+      "id": "recipe-iron-plate",
+      "name": "Iron Plate",
+      "category": "Crafting",
+      "craftTime": 6,
+      "ingredients": [{ "itemId": "iron-ingot", "amount": 3 }],
+      "products": [{ "itemId": "iron-plate", "amount": 2 }],
+      "defaultCrafterId": "constructor",
+      "unlockedByDefault": true
+    },
+    {
+      "id": "recipe-iron-rod",
+      "name": "Iron Rod",
+      "category": "Crafting",
+      "craftTime": 4,
+      "ingredients": [{ "itemId": "iron-ingot", "amount": 1 }],
+      "products": [{ "itemId": "iron-rod", "amount": 1 }],
+      "defaultCrafterId": "constructor",
+      "unlockedByDefault": true
+    },
+    {
+      "id": "recipe-screw",
+      "name": "Screw",
+      "category": "Crafting",
+      "craftTime": 6,
+      "ingredients": [{ "itemId": "iron-rod", "amount": 1 }],
+      "products": [{ "itemId": "screw", "amount": 4 }],
+      "defaultCrafterId": "constructor",
+      "unlockedByDefault": true
+    },
+    {
+      "id": "recipe-wire",
+      "name": "Wire",
+      "category": "Crafting",
+      "craftTime": 4,
+      "ingredients": [{ "itemId": "copper-ingot", "amount": 1 }],
+      "products": [{ "itemId": "copper-wire", "amount": 2 }],
+      "defaultCrafterId": "constructor",
+      "unlockedByDefault": true
+    },
+    {
+      "id": "recipe-cable",
+      "name": "Cable",
+      "category": "Crafting",
+      "craftTime": 4,
+      "ingredients": [{ "itemId": "copper-wire", "amount": 2 }],
+      "products": [{ "itemId": "cable", "amount": 1 }],
+      "defaultCrafterId": "constructor",
+      "unlockedByDefault": true
+    },
+    {
+      "id": "recipe-copper-sheet",
+      "name": "Copper Sheet",
+      "category": "Crafting",
+      "craftTime": 6,
+      "ingredients": [{ "itemId": "copper-ingot", "amount": 2 }],
+      "products": [{ "itemId": "copper-sheet", "amount": 1 }],
+      "defaultCrafterId": "constructor"
+    },
+    {
+      "id": "recipe-concrete",
+      "name": "Concrete",
+      "category": "Crafting",
+      "craftTime": 4,
+      "ingredients": [{ "itemId": "limestone", "amount": 3 }],
+      "products": [{ "itemId": "concrete", "amount": 1 }],
+      "defaultCrafterId": "constructor",
+      "unlockedByDefault": true
+    },
+    {
+      "id": "recipe-quickwire",
+      "name": "Quickwire",
+      "category": "Crafting",
+      "craftTime": 4,
+      "ingredients": [{ "itemId": "caterium-ingot", "amount": 1 }],
+      "products": [{ "itemId": "quickwire", "amount": 5 }],
+      "defaultCrafterId": "constructor"
+    },
+    {
+      "id": "recipe-steel-beam",
+      "name": "Steel Beam",
+      "category": "Crafting",
+      "craftTime": 4,
+      "ingredients": [{ "itemId": "steel-ingot", "amount": 4 }],
+      "products": [{ "itemId": "steel-beam", "amount": 1 }],
+      "defaultCrafterId": "constructor"
+    },
+    {
+      "id": "recipe-steel-pipe",
+      "name": "Steel Pipe",
+      "category": "Crafting",
+      "craftTime": 6,
+      "ingredients": [{ "itemId": "steel-ingot", "amount": 3 }],
+      "products": [{ "itemId": "steel-pipe", "amount": 1 }],
+      "defaultCrafterId": "constructor"
+    },
+    {
+      "id": "recipe-reinforced-iron-plate",
+      "name": "Reinforced Iron Plate",
+      "category": "Crafting",
+      "craftTime": 12,
+      "ingredients": [
+        { "itemId": "iron-plate", "amount": 6 },
+        { "itemId": "screw", "amount": 12 }
+      ],
+      "products": [{ "itemId": "reinforced-iron-plate", "amount": 1 }],
+      "defaultCrafterId": "assembler"
+    },
+    {
+      "id": "recipe-rotor",
+      "name": "Rotor",
+      "category": "Crafting",
+      "craftTime": 15,
+      "ingredients": [
+        { "itemId": "iron-rod", "amount": 5 },
+        { "itemId": "screw", "amount": 25 }
+      ],
+      "products": [{ "itemId": "rotor", "amount": 1 }],
+      "defaultCrafterId": "assembler"
+    },
+    {
+      "id": "recipe-stator",
+      "name": "Stator",
+      "category": "Crafting",
+      "craftTime": 12,
+      "ingredients": [
+        { "itemId": "steel-pipe", "amount": 3 },
+        { "itemId": "copper-wire", "amount": 8 }
+      ],
+      "products": [{ "itemId": "stator", "amount": 1 }],
+      "defaultCrafterId": "assembler"
+    },
+    {
+      "id": "recipe-motor",
+      "name": "Motor",
+      "category": "Crafting",
+      "craftTime": 12,
+      "ingredients": [
+        { "itemId": "rotor", "amount": 2 },
+        { "itemId": "stator", "amount": 2 }
+      ],
+      "products": [{ "itemId": "motor", "amount": 1 }],
+      "defaultCrafterId": "assembler"
+    },
+    {
+      "id": "recipe-modular-frame",
+      "name": "Modular Frame",
+      "category": "Crafting",
+      "craftTime": 60,
+      "ingredients": [
+        { "itemId": "reinforced-iron-plate", "amount": 5 },
+        { "itemId": "iron-rod", "amount": 24 }
+      ],
+      "products": [{ "itemId": "modular-frame", "amount": 2 }],
+      "defaultCrafterId": "assembler"
+    },
+    {
+      "id": "recipe-smart-plating",
+      "name": "Smart Plating",
+      "category": "Crafting",
+      "craftTime": 30,
+      "ingredients": [
+        { "itemId": "reinforced-iron-plate", "amount": 2 },
+        { "itemId": "rotor", "amount": 2 }
+      ],
+      "products": [{ "itemId": "smart-plating", "amount": 1 }],
+      "defaultCrafterId": "assembler"
+    },
+    {
+      "id": "recipe-encased-industrial-beam",
+      "name": "Encased Industrial Beam",
+      "category": "Crafting",
+      "craftTime": 10,
+      "ingredients": [
+        { "itemId": "steel-beam", "amount": 6 },
+        { "itemId": "concrete", "amount": 6 }
+      ],
+      "products": [{ "itemId": "encased-industrial-beam", "amount": 1 }],
+      "defaultCrafterId": "assembler",
+      "notes": "Ratio rounded for this example; verify exact numbers against the Satisfactory Wiki."
+    },
+    {
+      "id": "recipe-circuit-board",
+      "name": "Circuit Board",
+      "category": "Crafting",
+      "craftTime": 8,
+      "ingredients": [
+        { "itemId": "copper-sheet", "amount": 2 },
+        { "itemId": "plastic", "amount": 4 }
+      ],
+      "products": [{ "itemId": "circuit-board", "amount": 1 }],
+      "defaultCrafterId": "assembler"
+    },
+    {
+      "id": "recipe-heavy-modular-frame",
+      "name": "Heavy Modular Frame",
+      "category": "Crafting",
+      "craftTime": 30,
+      "ingredients": [
+        { "itemId": "modular-frame", "amount": 5 },
+        { "itemId": "steel-pipe", "amount": 15 },
+        { "itemId": "encased-industrial-beam", "amount": 5 },
+        { "itemId": "screw", "amount": 100 }
+      ],
+      "products": [{ "itemId": "heavy-modular-frame", "amount": 1 }],
+      "defaultCrafterId": "manufacturer"
+    },
+    {
+      "id": "recipe-plastic",
+      "name": "Plastic",
+      "category": "Refining",
+      "craftTime": 6,
+      "ingredients": [{ "itemId": "crude-oil", "amount": 3 }],
+      "products": [
+        { "itemId": "plastic", "amount": 2 },
+        { "itemId": "heavy-oil-residue", "amount": 1 }
+      ],
+      "defaultCrafterId": "refinery"
+    },
+    {
+      "id": "recipe-rubber",
+      "name": "Rubber",
+      "category": "Refining",
+      "craftTime": 6,
+      "ingredients": [{ "itemId": "crude-oil", "amount": 3 }],
+      "products": [
+        { "itemId": "rubber", "amount": 2 },
+        { "itemId": "heavy-oil-residue", "amount": 2 }
+      ],
+      "defaultCrafterId": "refinery"
+    },
+    {
+      "id": "recipe-residual-fuel",
+      "name": "Residual Fuel",
+      "category": "Refining",
+      "craftTime": 6,
+      "ingredients": [{ "itemId": "heavy-oil-residue", "amount": 6 }],
+      "products": [{ "itemId": "fuel", "amount": 4 }],
+      "defaultCrafterId": "refinery"
+    }
+  ]
+}
