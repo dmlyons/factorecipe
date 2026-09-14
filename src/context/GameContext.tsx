@@ -12,6 +12,12 @@ import {
 } from '../types';
 import { STARTER_PRESET, PRESETS } from '../data/presets';
 import { calculateProductionChain } from '../utils/calculator';
+import {
+  validateImportJson,
+  buildImportedDatabase,
+  extractFullBackupRestore,
+} from '../utils/importExport';
+import type { ImportPayload } from '../utils/importExport';
 import confetti from 'canvas-confetti';
 import {
   STORAGE_KEY_DATABASES,
@@ -119,10 +125,6 @@ function persistToStorage(key: string, value: string): void {
     console.error(`Failed to persist "${key}" to storage`, e);
   }
 }
-
-/** Loosely-typed shape of user-supplied import JSON: either a single sandbox or a full backup. */
-type ImportPayload = Partial<FullBackupExport> & Partial<GameDatabase>;
-
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -342,94 +344,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setActiveDatabaseId(STARTER_PRESET.id);
   }, []);
 
-  const validateImportJson = useCallback((jsonContent: string): ImportPreview => {
-    try {
-      const parsed = JSON.parse(jsonContent) as ImportPayload;
-      if (!parsed || typeof parsed !== 'object') {
-        return {
-          type: 'invalid',
-          itemCount: 0,
-          crafterCount: 0,
-          recipeCount: 0,
-          errors: ['JSON payload must be an object.'],
-        };
-      }
-
-      // Detect full workspace backup
-      if (parsed.factorecipe_backup_version || Array.isArray(parsed.databases)) {
-        const dbs = Array.isArray(parsed.databases) ? parsed.databases : [];
-        const totalItems = dbs.reduce(
-          (acc: number, d: GameDatabase) => acc + (d.items?.length || 0),
-          0,
-        );
-        const totalRecipes = dbs.reduce(
-          (acc: number, d: GameDatabase) => acc + (d.recipes?.length || 0),
-          0,
-        );
-        const totalCrafters = dbs.reduce(
-          (acc: number, d: GameDatabase) => acc + (d.crafters?.length || 0),
-          0,
-        );
-
-        return {
-          type: 'full_backup',
-          name: 'Full Workspace Backup',
-          icon: '🗄️',
-          version: parsed.factorecipe_backup_version || '1.0.0',
-          description: `Complete backup containing ${dbs.length} sandbox(es), unlocked progression, and pinned goals.`,
-          itemCount: totalItems,
-          crafterCount: totalCrafters,
-          recipeCount: totalRecipes,
-          databaseCount: dbs.length,
-          goalCount: Array.isArray(parsed.goals) ? parsed.goals.length : 0,
-          errors: [],
-        };
-      }
-
-      // Single database validation
-      const errors: string[] = [];
-      if (!parsed.name || typeof parsed.name !== 'string') {
-        errors.push('Missing "name" property (must be a non-empty string).');
-      }
-      if (!Array.isArray(parsed.items)) {
-        errors.push('Missing or invalid "items" array.');
-      }
-      if (!Array.isArray(parsed.recipes)) {
-        errors.push('Missing or invalid "recipes" array.');
-      }
-
-      if (errors.length > 0) {
-        return {
-          type: 'invalid',
-          itemCount: Array.isArray(parsed.items) ? parsed.items.length : 0,
-          crafterCount: Array.isArray(parsed.crafters) ? parsed.crafters.length : 0,
-          recipeCount: Array.isArray(parsed.recipes) ? parsed.recipes.length : 0,
-          errors,
-        };
-      }
-
-      return {
-        type: 'single_database',
-        name: parsed.name,
-        icon: parsed.icon || '🏭',
-        version: parsed.version || '1.0.0',
-        description: parsed.description || '',
-        itemCount: Array.isArray(parsed.items) ? parsed.items.length : 0,
-        crafterCount: Array.isArray(parsed.crafters) ? parsed.crafters.length : 0,
-        recipeCount: Array.isArray(parsed.recipes) ? parsed.recipes.length : 0,
-        errors: [],
-      };
-    } catch (e) {
-      return {
-        type: 'invalid',
-        itemCount: 0,
-        crafterCount: 0,
-        recipeCount: 0,
-        errors: [`JSON Syntax Error: ${(e as Error).message}`],
-      };
-    }
-  }, []);
-
   const importDatabase = useCallback(
     (
       jsonContent: string,
@@ -445,41 +359,26 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Handle Full Backup restoration
         if (preview.type === 'full_backup') {
-          const dbs = Array.isArray(parsed.databases) ? parsed.databases : [];
-          if (dbs.length === 0) {
+          const restored = extractFullBackupRestore(parsed);
+          if (restored.databases.length === 0) {
             return { success: false, message: 'Backup contains no databases.' };
           }
-          setDatabases(dbs);
-          setActiveDatabaseId(dbs[0].id);
-          if (parsed.progression && typeof parsed.progression === 'object') {
-            setAllProgressions(parsed.progression);
+          setDatabases(restored.databases);
+          setActiveDatabaseId(restored.databases[0].id);
+          if (restored.progression) {
+            setAllProgressions(restored.progression);
           }
-          if (Array.isArray(parsed.goals)) {
-            setGoals(parsed.goals);
+          if (restored.goals) {
+            setGoals(restored.goals);
           }
           return {
             success: true,
-            message: `Successfully restored full backup with ${dbs.length} sandbox(es).`,
+            message: `Successfully restored full backup with ${restored.databases.length} sandbox(es).`,
           };
         }
 
         // Handle Single Sandbox import
-        const importedDb: GameDatabase = {
-          id:
-            mode === 'overwrite'
-              ? activeDatabase.id
-              : `game-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-          name: parsed.name || 'Imported Sandbox',
-          version: parsed.version || '1.0.0',
-          description: parsed.description || '',
-          icon: parsed.icon || '🏭',
-          categories: Array.isArray(parsed.categories)
-            ? parsed.categories
-            : ['Raw Resources', 'Crafted'],
-          items: Array.isArray(parsed.items) ? parsed.items : [],
-          crafters: Array.isArray(parsed.crafters) ? parsed.crafters : [],
-          recipes: Array.isArray(parsed.recipes) ? parsed.recipes : [],
-        };
+        const importedDb = buildImportedDatabase(parsed, mode, activeDatabase.id);
 
         if (mode === 'overwrite') {
           setDatabases((prev) => prev.map((db) => (db.id === activeDatabase.id ? importedDb : db)));
@@ -507,7 +406,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, message: `Import error: ${(e as Error).message}` };
       }
     },
-    [activeDatabase.id, validateImportJson],
+    [activeDatabase.id],
   );
 
   const exportDatabaseJson = useCallback(
@@ -910,7 +809,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       downloadDatabaseJson,
       exportFullBackupJson,
       downloadFullBackupJson,
-      validateImportJson,
       isImportExportModalOpen,
       openImportExportModal,
       closeImportExportModal,

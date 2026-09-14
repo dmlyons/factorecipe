@@ -45,10 +45,18 @@ factorecipe/
 │   ├── utils/
 │   │   ├── calculator.ts            # DAG recursion engine, rate conversions, power summation, belt rates
 │   │   ├── calculator.test.ts       # Vitest unit tests for the calculation engine
+│   │   ├── importExport.ts          # Pure import/export logic: validateImportJson, buildImportedDatabase, extractFullBackupRestore
+│   │   ├── importExport.test.ts     # Vitest unit tests for import validation & building
 │   │   └── sort.ts                  # sortByName/sortStrings: shared Intl.Collator-based alphabetical ordering for catalogs & dropdowns
 │   ├── context/
-│   │   └── GameContext.tsx          # Global state, persistence hooks, and action dispatches
+│   │   ├── GameContext.tsx          # Global state, persistence hooks, and action dispatches (useCallback/useMemo throughout)
+│   │   ├── storageKeys.ts           # Shared localStorage key constants (used by GameContext and ErrorBoundary)
+│   │   └── ConfirmDialogContext.tsx # useConfirmDialog(): promise-based window.confirm replacement
 │   ├── components/
+│   │   ├── ErrorBoundary.tsx        # Top-level render-error guard; wraps the app root in main.tsx
+│   │   ├── common/
+│   │   │   ├── ConfirmDialog.tsx    # Presentational modal rendered by ConfirmDialogContext
+│   │   │   └── Toast.tsx            # Fixed-position banner rendered from GameContext's toast state
 │   │   ├── layout/
 │   │   │   └── Navbar.tsx           # Global navigation header, database selector, tab navigation
 │   │   ├── calculator/
@@ -66,9 +74,9 @@ factorecipe/
 │   │   │   └── DatabaseSettings.tsx # Multi-sandbox manager, JSON import/export, reset presets
 │   │   └── modals/
 │   │       └── ImportExportModal.tsx # Export/import UI: scope picker, JSON preview, drag-and-drop, validation preview
-│   ├── App.tsx                      # Root component containing GameProvider and active tab router
+│   ├── App.tsx                      # Root component containing GameProvider, ConfirmDialogProvider, and active tab router
 │   ├── index.css                    # Tailwind root directives, keyframe animations, dark scrollbar styling
-│   └── main.tsx                     # ReactDOM mounting entry
+│   └── main.tsx                     # ReactDOM mounting entry, wrapped in ErrorBoundary
 ├── examples/
 │   ├── satisfactory-1.2.json        # Example importable GameDatabase sandbox (see §9)
 │   └── star-rupture.json            # Example importable GameDatabase sandbox (see §9)
@@ -158,7 +166,18 @@ Global application state is managed via React Context and automatically persiste
 - **Crafter CRUD**: `addCrafter`, `updateCrafter`, `deleteCrafter`.
 - **Recipe CRUD**: `addRecipe`, `updateRecipe`, `deleteRecipe`.
 - **Progression**: `toggleRecipeUnlocked`, `toggleItemPinned`, `toggleChecklistItem`, `unlockAllRecipes`, `lockAllRecipes`.
-- **Live Calculation**: Synchronously re-computes `activeCalculation` whenever active goal, database, or preferred machines change.
+- **Toast Notifications**: `toast`, `showToast`, `dismissToast` — non-blocking replacement for `window.alert`, auto-dismisses after 5s, rendered by `src/components/common/Toast.tsx` in `App.tsx`.
+- **Live Calculation**: `activeCalculation` is `useMemo`'d on `[activeGoal, activeDatabase, preferredRecipes, preferredCrafters]` — it does NOT recompute on unrelated state changes (e.g. `searchQuery`).
+
+### Import/Export Logic (`src/utils/importExport.ts`)
+`validateImportJson`, `buildImportedDatabase`, and `extractFullBackupRestore` are pure functions extracted out of `GameContext.tsx` specifically so they're unit-testable (see `importExport.test.ts`) the same way `calculator.ts` is. `GameContext.importDatabase` is a thin orchestrator: it calls these, then applies the result via `setDatabases`/`setAllProgressions`/`setGoals`. `validateImportJson` checks per-element shape (every item needs `id`/`name`/`category`/`isRaw`; every crafter needs `id`/`name`/`speed`/`powerKW`/`category`; every recipe needs non-empty `ingredients`/`products` arrays whose lines have a valid `itemId`/`amount`) — this exists because a recipe missing `ingredients` previously reached the recursive DAG solver in `calculator.ts` and threw uncaught. When adding a new required `GameDatabase` field, update the matching `validate*Shape` function here, not just the TypeScript type.
+
+### Memoization Pattern
+Every action function in `GameProvider` is wrapped in `useCallback` with an accurate dependency array, `activeCalculation` and the `progression` fallback are `useMemo`'d, and the context `value` object itself is `useMemo`'d — without this, any unrelated state change (e.g. typing in the search box) re-renders every `useGame()` consumer and re-runs the DAG solver. When adding a new context action or piece of state, wrap it the same way; `eslint-plugin-react-hooks`'s `exhaustive-deps` rule (enabled as `warn`) will flag missing or unstable dependencies — treat those warnings as must-fix, not noise.
+
+### Error Boundary & Confirm Dialogs
+- `src/components/ErrorBoundary.tsx` wraps the app root in `main.tsx`. An uncaught render error (e.g. from malformed data that somehow bypassed `validateImportJson`) shows a recoverable fallback ("Try to Continue" / "Reset App Data & Reload") instead of a permanent white screen. It is a safety net, not a substitute for validating data at the boundary.
+- `src/context/ConfirmDialogContext.tsx` exposes `useConfirmDialog()`, returning `confirm(message, options?) => Promise<boolean>` — the `window.confirm` replacement, styled to match the app. `ConfirmDialogProvider` wraps `GameProvider` in `App.tsx`.
 
 ---
 
@@ -197,18 +216,20 @@ npm run preview
    - Do NOT leave unused imports or local variables (the project uses `"noUnusedLocals": true` and `"noUnusedParameters": true`).
    - Run `npm run build` after modifying files to verify that `tsc` compiles with 0 errors.
    - Run `npm run lint` after modifying `.ts`/`.tsx` files to verify ESLint (`eslint.config.js`) reports 0 errors; run `npm run format` if Prettier formatting drifts.
-   - Run `npm test` after modifying `src/utils/calculator.ts` (or any other file with a `*.test.ts` sibling) to verify the Vitest suite still passes.
+   - Run `npm test` after modifying `src/utils/calculator.ts`, `src/utils/importExport.ts`, or any other file with a `*.test.ts` sibling to verify the Vitest suite still passes.
 2. **Preserve User Customizations & Data Integrity**:
    - Always retain fallback handling when an item or machine is deleted from a custom sandbox.
    - When modifying recipes, ensure validation checks that at least one ingredient and one product exist.
+   - Imported JSON is untrusted: `validateImportJson` (`src/utils/importExport.ts`) checks every item/crafter/recipe element's required fields before any state is touched. If you add a required `GameDatabase`/`Item`/`Crafter`/`Recipe` field, add the matching check there too — don't let a shape mismatch reach `calculateProductionChain` uncaught.
 3. **UI Consistency**:
    - Retain the industrial dark palette (`bg-[#090d16]`, `bg-slate-900`, `border-slate-800`).
    - Use `formatRate` and `formatPower` for clean numerical formatting (avoid long floating-point decimals like `1.33333333333`).
    - For icons, use standard Lucide icons and emojis consistently.
    - Any list of items/crafters/recipes/categories/sandboxes rendered as a catalog grid, filter-chip row, or `<select>`/picker MUST be sorted with `sortByName`/`sortStrings` (`src/utils/sort.ts`) rather than left in raw insertion order — long unsorted lists are hard to scan. Exception: user-ordered lists (e.g. pinned goal tabs) and fixed-structure nav stay in their existing order.
+   - NEVER use `window.alert`/`window.confirm` directly. For a one-shot message, call `showToast(message)` from `useGame()`. For a destructive-action confirmation, call `const confirm = useConfirmDialog();` then `if (await confirm(message)) { ... }` (wrap the click handler as `onClick={() => { void (async () => { ... })(); }}`, since an `async` function can't be passed directly to `onClick`).
 
 4. **Testing Discipline**:
-   - Pure logic (calculation, formatting, validation) gets colocated `*.test.ts` unit tests; UI components currently have no test harness — verify those manually (`npm run dev`) instead of adding ad hoc component tests.
+   - Pure logic (calculation, formatting, validation) gets colocated `*.test.ts` unit tests: `calculator.ts`/`calculator.test.ts` and `importExport.ts`/`importExport.test.ts`. UI components currently have no test harness — verify those manually (`npm run dev`) instead of adding ad hoc component tests.
    - A test earns its place only if a plausible bug in the covered function would fail it; don't pin incidental output formatting or restate the implementation.
 5. **Git Workflow**:
    - Never `git commit` or `git push` unless the user explicitly asks or directly instructs it in that turn. Staged/local diffs are fine to leave uncommitted for review.
