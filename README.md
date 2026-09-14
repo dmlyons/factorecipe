@@ -38,8 +38,13 @@ An interactive, sandbox-focused recipe tracker, production tree solver, and fact
   - Build your own games and modded tech trees from scratch.
   - Add, edit, or delete items, crafters/machines, and recipes.
   - Full **Export / Import JSON** support to backup or share your factory databases with other players.
+  - Import validation checks every item/crafter/recipe's required fields before touching app state, so a malformed sandbox file is rejected with a specific error instead of corrupting your data.
   - Pre-loaded with a comprehensive **Standard Factory Sandbox** (smelting, circuits, chemical refining, science) and a **Blank Sandbox** for custom ground-up setups.
   - Community example datasets in `examples/` (e.g. a Satisfactory 1.2 production chain) — importable via Settings → Import Sandbox without any code changes.
+
+- 🛡️ **Resilient by Design**:
+  - A top-level error boundary catches unexpected render errors with a recoverable fallback (retry, or reset app data) instead of a blank white screen.
+  - Styled, non-blocking confirm/toast dialogs replace native browser `alert`/`confirm` popups for delete confirmations and validation messages.
 
 ---
 
@@ -107,6 +112,10 @@ $$\text{Total Power} = \sum (\text{Machines}_{\text{exact}} \times \text{Power}_
 factorecipe/
 ├── src/
 │   ├── components/
+│   │   ├── ErrorBoundary.tsx          # Top-level render-error guard (main.tsx), recoverable fallback UI
+│   │   ├── common/
+│   │   │   ├── ConfirmDialog.tsx      # Styled window.confirm replacement (rendered by ConfirmDialogContext)
+│   │   │   └── Toast.tsx              # Styled window.alert replacement (rendered from GameContext toast state)
 │   │   ├── calculator/
 │   │   │   ├── CalculatorView.tsx     # Target rates, metrics, table & checklist views
 │   │   │   └── FlowGraph.tsx          # Interactive SVG canvas with mouse/touch pan, wheel/pinch zoom, animated DAG flow
@@ -125,7 +134,9 @@ factorecipe/
 │   │   └── settings/
 │   │       └── DatabaseSettings.tsx   # Multi-game manager & JSON import/export
 │   ├── context/
-│   │   └── GameContext.tsx            # Global state & LocalStorage persistence
+│   │   ├── GameContext.tsx            # Global state & LocalStorage persistence (memoized)
+│   │   ├── storageKeys.ts             # Shared localStorage key constants
+│   │   └── ConfirmDialogContext.tsx   # useConfirmDialog() hook + provider
 │   ├── data/
 │   │   └── presets.ts                 # Standard Factory & Blank presets
 │   ├── hooks/
@@ -135,10 +146,12 @@ factorecipe/
 │   ├── utils/
 │   │   ├── calculator.ts              # Production graph solver & metrics helpers
 │   │   ├── calculator.test.ts         # Vitest unit tests for the solver
+│   │   ├── importExport.ts            # Pure import/export validation & building logic
+│   │   ├── importExport.test.ts       # Vitest unit tests for import validation & building
 │   │   └── sort.ts                    # Shared Intl.Collator-based alphabetical sort helpers
 │   ├── App.tsx                        # Main application container
 │   ├── index.css                      # Tailwind & custom keyframe styling
-│   └── main.tsx                       # React DOM root entry
+│   └── main.tsx                       # React DOM root entry, wrapped in ErrorBoundary
 ├── examples/
 │   ├── satisfactory-1.2.json          # Example importable sandbox dataset
 │   └── star-rupture.json              # Example importable sandbox dataset
